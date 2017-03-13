@@ -1,0 +1,23 @@
+{
+	"FileVersion": 3,
+	"Version": 1,
+	"VersionName": "1.0",
+	"FriendlyName": "UVision",
+	"Description": "CameraActor that captures RGB-D data and sends it out over TCP.",
+	"Category": "UVision",
+	"CreatedBy": "todo",
+	"CreatedByURL": "todo",
+	"DocsURL": "https://github.com/todo/UVision",
+	"MarketplaceURL": "",
+	"SupportURL": "https://github.com/todo/UVision/issues",
+	"CanContainContent": true,
+	"IsBetaVersion": false,
+	"Installed": false,
+	"Modules": [
+		{
+			"Name": "UVision",
+			"Type": "Developer",
+			"LoadingPhase": "Default"
+		}
+	]
+}
