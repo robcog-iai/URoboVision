@@ -57,11 +57,19 @@ public:
 	UPROPERTY(EditAnywhere, Category = "RGB-D Settings")
 	int32 ServerPort;
 
-private:
-	// Private data container
-	class PrivateData;
-	PrivateData* Priv;
+	// Capture color image
+	UPROPERTY(EditAnywhere, Category = "RGB-D Settings")
+	bool bCaptureColorImage;
 
+	// Capture depth image
+	UPROPERTY(EditAnywhere, Category = "RGB-D Settings")
+	bool bCaptureDepthImage;
+
+	// Capture object mask image
+	UPROPERTY(EditAnywhere, Category = "RGB-D Settings")
+	bool bCaptureObjectMaskImage;
+
+private:
 	// Camera capture component for color images (RGB)
 	USceneCaptureComponent2D* ColorImgCaptureComp;
 
@@ -74,8 +82,14 @@ private:
 	// Material instance to get the depth data
 	UMaterialInstanceDynamic* MaterialDepthInstance;
 
-	float FrameTime, TimePassed;
+	// Private data container
+	class PrivateData;
+	PrivateData* Priv;
+
+	// Buffers for reading the data from the GPU
 	TArray<FFloat16Color> ImageColor, ImageDepth, ImageObject;
+
+	float FrameTime, TimePassed;
 	TArray<uint8> DataColor, DataDepth, DataObject;
 	TArray<FColor> ObjectColors;
 	TMap<FString, uint32> ObjectToColor;
