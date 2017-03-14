@@ -74,6 +74,7 @@ AVisionCamera::AVisionCamera() /*: ACameraActor(), Width(960), Height(540), Fram
 	DepthImgCaptureComp->Deactivate();
 	ObjectMaskImgCaptureComp->SetHiddenInGame(true);
 	ObjectMaskImgCaptureComp->Deactivate();
+	bCompActive = false;
 
 	// Capture flags default values
 	bCaptureColorImage = true;
@@ -148,18 +149,21 @@ void AVisionCamera::BeginPlay()
 	{
 		ColorImgCaptureComp->SetHiddenInGame(false);
 		ColorImgCaptureComp->Activate();
+		bCompActive = true;
 		Priv->ThreadColor = std::thread(&AVisionCamera::ProcessColor, this);
 	}
 	if (bCaptureDepthImage)
 	{
 		DepthImgCaptureComp->SetHiddenInGame(false);
 		DepthImgCaptureComp->Activate();
+		bCompActive = true;
 		Priv->ThreadDepth = std::thread(&AVisionCamera::ProcessDepth, this);
 	}
 	if (bCaptureObjectMaskImage)
 	{
 		ObjectMaskImgCaptureComp->SetHiddenInGame(false);
 		ObjectMaskImgCaptureComp->Activate();
+		bCompActive = true;
 		Priv->ThreadObject = std::thread(&AVisionCamera::ProcessObject, this);
 	}
 }
@@ -270,6 +274,38 @@ void AVisionCamera::SetFramerate(const float _Framerate)
 void AVisionCamera::Pause(const bool _Pause)
 {
 	Paused = _Pause;
+	if (Paused)
+	{
+		// Disable the capture components by default (enable if needed in begin play)
+		ColorImgCaptureComp->SetHiddenInGame(true);
+		ColorImgCaptureComp->Deactivate();
+		DepthImgCaptureComp->SetHiddenInGame(true);
+		DepthImgCaptureComp->Deactivate();
+		ObjectMaskImgCaptureComp->SetHiddenInGame(true);
+		ObjectMaskImgCaptureComp->Deactivate();
+		bCompActive = false;	
+	}
+	else
+	{
+		// Enable capture 
+		if (bCaptureColorImage)
+		{
+			ColorImgCaptureComp->SetHiddenInGame(false);
+			ColorImgCaptureComp->Activate();
+
+		}
+		if (bCaptureDepthImage)
+		{
+			DepthImgCaptureComp->SetHiddenInGame(false);
+			DepthImgCaptureComp->Activate();
+		}
+		if (bCaptureObjectMaskImage)
+		{
+			ObjectMaskImgCaptureComp->SetHiddenInGame(false);
+			ObjectMaskImgCaptureComp->Activate();
+		}
+		bCompActive = true;
+	}
 }
 
 bool AVisionCamera::IsPaused() const

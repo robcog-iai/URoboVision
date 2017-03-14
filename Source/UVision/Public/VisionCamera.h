@@ -86,6 +86,9 @@ private:
 	class PrivateData;
 	PrivateData* Priv;
 
+	// Are the capture components active
+	bool bCompActive;
+
 	// Buffers for reading the data from the GPU
 	TArray<FFloat16Color> ImageColor, ImageDepth, ImageObject;
 
