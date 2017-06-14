@@ -2,21 +2,21 @@
 	"FileVersion": 3,
 	"Version": 1,
 	"VersionName": "1.0",
-	"FriendlyName": "UVision",
+	"FriendlyName": "URoboVision",
 	"Description": "CameraActor that captures RGB-D data and sends it out over TCP.",
-	"Category": "UVision",
-	"CreatedBy": "todo",
-	"CreatedByURL": "todo",
-	"DocsURL": "https://github.com/todo/UVision",
+	"Category": "RobCoG",
+	"CreatedBy": "http://robcog.org/",
+	"CreatedByURL": "",
+	"DocsURL": "",
 	"MarketplaceURL": "",
-	"SupportURL": "https://github.com/todo/UVision/issues",
+	"SupportURL": "http://robcog.org/",
 	"CanContainContent": true,
 	"IsBetaVersion": false,
 	"Installed": false,
 	"Modules": [
 		{
-			"Name": "UVision",
-			"Type": "Developer",
+			"Name": "URoboVision",
+			"Type": "Runtime",
 			"LoadingPhase": "Default"
 		}
 	]

@@ -1,23 +1,26 @@
+// Copyright 2017, Institute for Artificial Intelligence - University of Bremen
+
 #pragma once
 
 #include "GameFramework/Actor.h"
 #include "Camera/CameraActor.h"
+#include "Engine/TextureRenderTarget2D.h"
 #include "StaticMeshResources.h"
 #include "Components/SceneCaptureComponent2D.h"
 #include "Materials/MaterialInstanceDynamic.h"
-#include "VisionCamera.generated.h"
+#include "RGBDCamera.generated.h"
 
 UCLASS()
-class UVISION_API AVisionCamera : public ACameraActor
+class UROBOVISION_API ARGBDCamera : public ACameraActor
 {
 	GENERATED_BODY()
 
 public:
 	// Sets default values for this actor's properties
-	AVisionCamera();
+	ARGBDCamera();
 
 	// Sets default values for this actor's properties
-	virtual ~AVisionCamera();
+	virtual ~ARGBDCamera();
 
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;

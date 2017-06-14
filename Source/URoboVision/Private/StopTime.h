@@ -1,13 +1,14 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+// Copyright 2017, Institute for Artificial Intelligence - University of Bremen
+
 
 #pragma once
 
-#include "UVision.h"
+#include "URoboVision.h"
 #include <chrono>
 /**
  *
  */
-class UVISION_API StopTime
+class UROBOVISION_API StopTime
 {
 protected:
   const std::chrono::high_resolution_clock::time_point StartTime;
@@ -27,7 +28,7 @@ public:
   }
 };
 
-class UVISION_API ScopeTime : private StopTime
+class UROBOVISION_API ScopeTime : private StopTime
 {
 private:
   FString Function;

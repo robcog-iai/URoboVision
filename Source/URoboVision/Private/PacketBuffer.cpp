@@ -1,5 +1,7 @@
-#include "UVision.h"
+// Copyright 2017, Institute for Artificial Intelligence - University of Bremen
+
 #include "PacketBuffer.h"
+//#include "URoboVision.h"
 
 PacketBuffer::PacketBuffer(const uint32 Width, const uint32 Height, const float FieldOfView) :
   IsDataReadable(false), SizeHeader(sizeof(PacketHeader)), SizeRGB(Width *Height * 3 * sizeof(uint8)), SizeFloat(Width *Height *sizeof(FFloat16)),

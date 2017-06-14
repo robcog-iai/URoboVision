@@ -1,5 +1,10 @@
-#include "UVision.h"
-#include "VisionCamera.h"
+// Copyright 2017, Institute for Artificial Intelligence - University of Bremen
+
+#include "RGBDCamera.h"
+#include "Components/SceneCaptureComponent2D.h"
+#include "Camera/CameraComponent.h"
+#include "ConstructorHelpers.h"
+#include "EngineUtils.h"
 #include "StopTime.h"
 #include "Server.h"
 #include "PacketBuffer.h"
@@ -13,7 +18,7 @@
 
 
 // Private data container so that internal structures are not visible to the outside
-class UVISION_API AVisionCamera::PrivateData
+class UROBOVISION_API ARGBDCamera::PrivateData
 {
 public:
 	TSharedPtr<PacketBuffer> Buffer;
@@ -26,7 +31,7 @@ public:
 };
 
 // Sets default values
-AVisionCamera::AVisionCamera() /*: ACameraActor(), Width(960), Height(540), Framerate(1), FieldOfView(90.0), ServerPort(10000), FrameTime(1.0f / Framerate), TimePassed(0), ColorsUsed(0)*/
+ARGBDCamera::ARGBDCamera() /*: ACameraActor(), Width(960), Height(540), Framerate(1), FieldOfView(90.0), ServerPort(10000), FrameTime(1.0f / Framerate), TimePassed(0), ColorsUsed(0)*/
 {
 	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
@@ -91,7 +96,7 @@ AVisionCamera::AVisionCamera() /*: ACameraActor(), Width(960), Height(540), Fram
 
 	// Get depth scene material for postprocessing
 	OUT_INFO(TEXT("Loading materials."));
-	ConstructorHelpers::FObjectFinder<UMaterial> MaterialDepthFinder(TEXT("Material'/UVision/SceneDepth.SceneDepth'"));
+	ConstructorHelpers::FObjectFinder<UMaterial> MaterialDepthFinder(TEXT("Material'/URoboVision/SceneDepth.SceneDepth'"));
 	if(MaterialDepthFinder.Object != nullptr)
 	{
 		MaterialDepthInstance = UMaterialInstanceDynamic::Create(MaterialDepthFinder.Object, DepthImgCaptureComp);
@@ -116,14 +121,14 @@ AVisionCamera::AVisionCamera() /*: ACameraActor(), Width(960), Height(540), Fram
 	Priv->Server.Buffer = Priv->Buffer;
 }
 
-AVisionCamera::~AVisionCamera()
+ARGBDCamera::~ARGBDCamera()
 {
 	delete Priv;
-	OUT_INFO(TEXT("VisionCamera got destroyed!"));
+	OUT_INFO(TEXT("RGBDCamera got destroyed!"));
 }
 
 // Called when the game starts or when spawned
-void AVisionCamera::BeginPlay()
+void ARGBDCamera::BeginPlay()
 {
 	Super::BeginPlay();
 	OUT_INFO(TEXT("Begin play!"));
@@ -150,26 +155,26 @@ void AVisionCamera::BeginPlay()
 		ColorImgCaptureComp->SetHiddenInGame(false);
 		ColorImgCaptureComp->Activate();
 		bCompActive = true;
-		Priv->ThreadColor = std::thread(&AVisionCamera::ProcessColor, this);
+		Priv->ThreadColor = std::thread(&ARGBDCamera::ProcessColor, this);
 	}
 	if (bCaptureDepthImage)
 	{
 		DepthImgCaptureComp->SetHiddenInGame(false);
 		DepthImgCaptureComp->Activate();
 		bCompActive = true;
-		Priv->ThreadDepth = std::thread(&AVisionCamera::ProcessDepth, this);
+		Priv->ThreadDepth = std::thread(&ARGBDCamera::ProcessDepth, this);
 	}
 	if (bCaptureObjectMaskImage)
 	{
 		ObjectMaskImgCaptureComp->SetHiddenInGame(false);
 		ObjectMaskImgCaptureComp->Activate();
 		bCompActive = true;
-		Priv->ThreadObject = std::thread(&AVisionCamera::ProcessObject, this);
+		Priv->ThreadObject = std::thread(&ARGBDCamera::ProcessObject, this);
 	}
 }
 
 // Called when the game starts or when spawned
-void AVisionCamera::EndPlay(const EEndPlayReason::Type EndPlayReason)
+void ARGBDCamera::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
 	Super::EndPlay(EndPlayReason);
 	OUT_INFO(TEXT("End play!"));
@@ -192,7 +197,7 @@ void AVisionCamera::EndPlay(const EEndPlayReason::Type EndPlayReason)
 }
 
 // Called every frame
-void AVisionCamera::Tick(float DeltaTime)
+void ARGBDCamera::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
@@ -263,7 +268,7 @@ void AVisionCamera::Tick(float DeltaTime)
 	Priv->CVDepth.notify_one();
 }
 
-void AVisionCamera::SetFramerate(const float _Framerate)
+void ARGBDCamera::SetFramerate(const float _Framerate)
 {
 	Framerate = _Framerate;
 	FrameTime = 1.0f / _Framerate;
@@ -271,7 +276,7 @@ void AVisionCamera::SetFramerate(const float _Framerate)
 	OUT_INFO(TEXT("FRAMERATE SET TO: %f"),Framerate);
 }
 
-void AVisionCamera::Pause(const bool _Pause)
+void ARGBDCamera::Pause(const bool _Pause)
 {
 	Paused = _Pause;
 	if (Paused)
@@ -308,12 +313,12 @@ void AVisionCamera::Pause(const bool _Pause)
 	}
 }
 
-bool AVisionCamera::IsPaused() const
+bool ARGBDCamera::IsPaused() const
 {
 	return Paused;
 }
 
-void AVisionCamera::ShowFlagsBasicSetting(FEngineShowFlags &ShowFlags) const
+void ARGBDCamera::ShowFlagsBasicSetting(FEngineShowFlags &ShowFlags) const
 {
 	ShowFlags = FEngineShowFlags(EShowFlagInitMode::ESFIM_All0);
 	ShowFlags.SetRendering(true);
@@ -325,7 +330,7 @@ void AVisionCamera::ShowFlagsBasicSetting(FEngineShowFlags &ShowFlags) const
 	ShowFlags.SetSkeletalMeshes(true);
 }
 
-void AVisionCamera::ShowFlagsLit(FEngineShowFlags &ShowFlags) const
+void ARGBDCamera::ShowFlagsLit(FEngineShowFlags &ShowFlags) const
 {
 	ShowFlagsBasicSetting(ShowFlags);
 	ShowFlags = FEngineShowFlags(EShowFlagInitMode::ESFIM_Game);
@@ -342,7 +347,7 @@ void AVisionCamera::ShowFlagsLit(FEngineShowFlags &ShowFlags) const
 	ShowFlags.SetEyeAdaptation(false); // Eye adaption is a slow temporal procedure, not useful for image capture
 }
 
-void AVisionCamera::ShowFlagsPostProcess(FEngineShowFlags &ShowFlags) const
+void ARGBDCamera::ShowFlagsPostProcess(FEngineShowFlags &ShowFlags) const
 {
 	ShowFlagsBasicSetting(ShowFlags);
 	ShowFlags.SetPostProcessing(true);
@@ -351,7 +356,7 @@ void AVisionCamera::ShowFlagsPostProcess(FEngineShowFlags &ShowFlags) const
 	GVertexColorViewMode = EVertexColorViewMode::Color;
 }
 
-void AVisionCamera::ShowFlagsVertexColor(FEngineShowFlags &ShowFlags) const
+void ARGBDCamera::ShowFlagsVertexColor(FEngineShowFlags &ShowFlags) const
 {
 	ShowFlagsLit(ShowFlags);
 	ApplyViewMode(VMI_Lit, true, ShowFlags);
@@ -368,13 +373,13 @@ void AVisionCamera::ShowFlagsVertexColor(FEngineShowFlags &ShowFlags) const
 	GVertexColorViewMode = EVertexColorViewMode::Color;
 }
 
-void AVisionCamera::ReadImage(UTextureRenderTarget2D *RenderTarget, TArray<FFloat16Color> &ImageData) const
+void ARGBDCamera::ReadImage(UTextureRenderTarget2D *RenderTarget, TArray<FFloat16Color> &ImageData) const
 {
 	FTextureRenderTargetResource *RenderTargetResource = RenderTarget->GameThread_GetRenderTargetResource();
 	RenderTargetResource->ReadFloat16Pixels(ImageData);
 }
 
-void AVisionCamera::ToColorImage(const TArray<FFloat16Color> &ImageData, uint8 *Bytes) const
+void ARGBDCamera::ToColorImage(const TArray<FFloat16Color> &ImageData, uint8 *Bytes) const
 {
 	const FFloat16Color *itI = ImageData.GetData();
 	uint8_t *itO = Bytes;
@@ -389,7 +394,7 @@ void AVisionCamera::ToColorImage(const TArray<FFloat16Color> &ImageData, uint8 *
 	return;
 }
 
-void AVisionCamera::ToDepthImage(const TArray<FFloat16Color> &ImageData, uint8 *Bytes) const
+void ARGBDCamera::ToDepthImage(const TArray<FFloat16Color> &ImageData, uint8 *Bytes) const
 {
 	const FFloat16Color *itI = ImageData.GetData();
 	uint16_t *itO = reinterpret_cast<uint16_t *>(Bytes);
@@ -402,7 +407,7 @@ void AVisionCamera::ToDepthImage(const TArray<FFloat16Color> &ImageData, uint8 *
 	return;
 }
 
-void AVisionCamera::StoreImage(const uint8 *ImageData, const uint32 Size, const char *Name) const
+void ARGBDCamera::StoreImage(const uint8 *ImageData, const uint32 Size, const char *Name) const
 {
 	std::ofstream File(Name, std::ofstream::out | std::ofstream::binary | std::ofstream::trunc);
 	File.write(reinterpret_cast<const char *>(ImageData), Size);
@@ -414,7 +419,7 @@ void AVisionCamera::StoreImage(const uint8 *ImageData, const uint32 Size, const 
  * It takes MaxHue different Hue values and additional steps ind Value and Saturation to get
  * the number of needed colors.
  */
-void AVisionCamera::GenerateColors(const uint32_t NumberOfColors)
+void ARGBDCamera::GenerateColors(const uint32_t NumberOfColors)
 {
 	const int32_t MaxHue = 50;
 	// It shifts the next Hue value used, so that colors next to each other are not very similar. This is just important for humans
@@ -466,7 +471,7 @@ void AVisionCamera::GenerateColors(const uint32_t NumberOfColors)
 	}
 }
 
-bool AVisionCamera::ColorObject(AActor *Actor, const FString &name)
+bool ARGBDCamera::ColorObject(AActor *Actor, const FString &name)
 {
 	const FColor &ObjectColor = ObjectColors[ObjectToColor[name]];
 	TArray<UMeshComponent *> PaintableComponents;
@@ -516,7 +521,7 @@ bool AVisionCamera::ColorObject(AActor *Actor, const FString &name)
 	return true;
 }
 
-bool AVisionCamera::ColorAllObjects()
+bool ARGBDCamera::ColorAllObjects()
 {
 	uint32_t NumberOfActors = 0;
 
@@ -548,7 +553,7 @@ bool AVisionCamera::ColorAllObjects()
 	return true;
 }
 
-void AVisionCamera::ProcessColor()
+void ARGBDCamera::ProcessColor()
 {
 	while(true)
 	{
@@ -563,7 +568,7 @@ void AVisionCamera::ProcessColor()
 	}
 }
 
-void AVisionCamera::ProcessDepth()
+void ARGBDCamera::ProcessDepth()
 {
 	while(true)
 	{
@@ -585,7 +590,7 @@ void AVisionCamera::ProcessDepth()
 	}
 }
 
-void AVisionCamera::ProcessObject()
+void ARGBDCamera::ProcessObject()
 {
 	while(true)
 	{

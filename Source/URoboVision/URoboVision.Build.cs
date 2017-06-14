@@ -1,13 +1,16 @@
+// Copyright 2017, Institute for Artificial Intelligence - University of Bremen
+
 using UnrealBuildTool;
 
-public class UVision : ModuleRules
+public class URoboVision : ModuleRules
 {
-	public UVision(TargetInfo Target)
+	public URoboVision(ReadOnlyTargetRules Target) : base(Target)
 	{
+		PCHUsage = ModuleRules.PCHUsageMode.UseExplicitOrSharedPCHs;
 		
 		PublicIncludePaths.AddRange(
 			new string[] {
-				"UVision/Public"
+				"URoboVision/Public"
 				// ... add public include paths required here ...
 			}
 			);
@@ -15,7 +18,7 @@ public class UVision : ModuleRules
 		
 		PrivateIncludePaths.AddRange(
 			new string[] {
-				"UVision/Private",
+				"URoboVision/Private",
 				// ... add other private include paths required here ...
 			}
 			);

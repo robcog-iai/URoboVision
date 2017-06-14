@@ -1,3 +1,5 @@
+// Copyright 2017, Institute for Artificial Intelligence - University of Bremen
+
 #pragma once
 
 #include <mutex>
@@ -10,7 +12,7 @@
  * the DoneWriting method is called. So when the VisionActor is done writing, the StartReading methods returns
  * and the Server will start reading and sending the packet.
  */
-class UVISION_API PacketBuffer
+class UROBOVISION_API PacketBuffer
 {
 public:
   /**
