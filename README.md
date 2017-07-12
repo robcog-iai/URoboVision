@@ -12,3 +12,8 @@ Usage
 
 -	Set parameters in the `RGB-D Settings`
 	
+
+Credits
+====
+
+Based on the [UnrealCV](http://unrealcv.org/) project, modified by Thiemo Wiedemeyer to be able to send RGB-D data over the network, accesable by [RoboSherlock](http://robosherlock.org/).
