@@ -1,0 +1,32 @@
+// Fill out your copyright notice in the Description page of Project Settings.
+
+#pragma once
+
+#include "CoreMinimal.h"
+#include "Runtime/Core/Public/Async/AsyncWork.h"
+#include "Runtime/ImageWrapper/Public/IImageWrapper.h"
+#include "Runtime/ImageWrapper/Public/IImageWrapperModule.h"
+
+/**
+ * 
+ */
+class UVISIONLOGGER_API RawDataAsyncWorker : public FNonAbandonableTask
+{
+private:
+	int Width;
+	int Height;
+	FDateTime TimeStamp;
+	FString FolderName;
+	FString ImageName;
+	FString Episode;
+	FString CameraName;
+	TSharedPtr<IImageWrapper> ImageWrapper;
+	TArray<FColor> Image;
+public:
+	RawDataAsyncWorker(TArray<FColor>& Image_init, TSharedPtr<IImageWrapper>& ImageWrapperRef, FDateTime Stamp, FString Folder, FString Name, int Width_init, int Height_init, FString ImageEpisode,FString CameraId);
+	~RawDataAsyncWorker();
+	FORCEINLINE TStatId GetStatId() const;
+	void DoWork();
+	void SetLogToImage();
+	void SaveImage(TArray<FColor>&image, TSharedPtr<IImageWrapper> &ImageWrapper, FDateTime Stamp, FString Folder, FString ImageName, int Width, int Height, FString Episode, FString CameraId);
+};
