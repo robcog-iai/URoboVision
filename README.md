@@ -7,7 +7,7 @@ Unreal plugin with a CameraActor that captures Color,Mask,Depth and Normal Image
 # Usage
 *  Add the plugin to your project (e.g `MyProject/Plugins/UVisionLogger`)
 *  Add [libmongo](https://github.com/robcog-iai/libmongo) to your project (e.g `MyProject/Plugins/libmongo`)
-*  Drag and drop `UVCamera` to your level
-   ![](Documentation/Img/UVCamera.PNG)
-*  Set parameters in the `Vision Settings`
-   ![](Documentation/Img/Setting.PNG)
+*  Drag and drop `UVCamera` to your level.
+    ![](Documentation/Img/UVCamera.PNG)
+*  Set parameters in the `Vision Settings`.
+    ![](Documentation/Img/Setting.PNG)
