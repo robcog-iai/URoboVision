@@ -33,6 +33,6 @@ Unreal plugin with a CameraActor that captures Color,Mask,Depth and Normal Image
 **ReadBsonHelper.py** -- python script to read bson file and save all images in folder **Vision Logger/Bson_image_folder**.
 * Usage: Change file path to your bson file path in this script. In Command line window, run **python ReadBsonHelper.py**
 
-**Read_Bson_helper.ipynb** -- jupyter notebook to read bson file and save all images in folder **Vision Logger/Bson_image_folder**.
+**Read_Bson_helper.ipynb** -- jupyter notebook to read bson file and save all images in folder 
 
 **ReadMaskColorHelper.ipynb** -- jupyter notebook to read Mask Color used in mask image.
