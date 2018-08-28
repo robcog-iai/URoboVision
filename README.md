@@ -11,7 +11,7 @@ Unreal plugin with a CameraActor that captures Color,Mask,Depth and Normal Image
 
     ![](Documentation/Img/UVCamera.PNG)
     
-*  Set parameters in the `Vision Settings`.
+*  Set parameters in the [`Vision Settings`](Documentation/VisionSetting.md).
 
     ![](Documentation/Img/Setting.PNG)
     
