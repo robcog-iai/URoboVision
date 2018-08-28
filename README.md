@@ -18,3 +18,4 @@ Unreal plugin with a CameraActor that captures Color,Mask,Depth and Normal Image
 *  Drag multiple `UVCamera` to capture different views simultaneously.
 
 # Demo result
+![](Documentation/Img/Demo_result.gif)
