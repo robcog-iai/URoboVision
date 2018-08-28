@@ -7,6 +7,6 @@
    * **Color Mode** -- **Capture Viewport** can be used only in Editor level. **Caputer Scene Component** can be used in launch game.
 
 * **Save Mode** -- Choose different kinds of ways to save captured images
-  * **Monge DB** -- when **Save in Mongo DB** is chosen. you can edit Mongo ip,port and database name while settings bellow.
+  * **Monge DB** -- When **Save in Mongo DB** is chosen. you can edit Mongo ip,port and database name while settings bellow.
  
  										 
