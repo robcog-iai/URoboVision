@@ -25,4 +25,6 @@ Unreal plugin with a CameraActor that captures Color,Mask,Depth and Normal Image
 * When mask image is captured, corresponding mask colors are saved as bson file in folder **Mask Color**. 
 * When **Save as Bson file** is chosen, it will create a folder **Bson File** to save all images in bson file.
 ![](Documentation/Img/Demo_result.gif)
+* When **Save in Mongo** is chosen, you can view results as follow in MongoDB.
+![](Documentation/Img/Mongo_result.png)
 
