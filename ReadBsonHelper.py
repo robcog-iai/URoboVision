@@ -80,7 +80,7 @@ def Read_Save_Image_in_Bson(file_path):
 if __name__ == '__main__':
 
     ### give the correct bson file folder path here
-    file_path = "E:/Work_AI/test/RobCoG/Vision Logger/2018_8_10_6_44/Cam01/Bson File/"
+    file_path = os.path.expanduser("../../Vision Logger/2018_8_28_9_53/Cam01/Bson File/")
 
     print(os.path.abspath(file_path))
 
