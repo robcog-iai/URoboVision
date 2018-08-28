@@ -23,6 +23,6 @@ Unreal plugin with a CameraActor that captures Color,Mask,Depth and Normal Image
 * Each Camera will create a folder of itself. 
 * All images captured will be saved in folder **viewport**.
 * When mask image is captured, corresponding mask colors are saved as bson file in folder **Mask Color**. 
-* When **Save as Bson file** is chosen, it will create a 
+* When **Save as Bson file** is chosen, it will create a folder **Bson File** to save all images in bson file.
 ![](Documentation/Img/Demo_result.gif)
 
