@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+// Copyright 2018, Institute for Artificial Intelligence - University of Bremen
 
 #pragma once
 
@@ -6,13 +6,17 @@
 #include "Camera/CameraActor.h"
 #include "Engine.h"
 #include "UnrealEd.h"
-#include "bson.h"
-#include "mongoc.h"
 #include "RawDataAsyncWorker.h"
 #include "Runtime/Core/Public/Async/AsyncWork.h"
 #include "Engine/TextureRenderTarget2D.h"
 #include "Components/SceneCaptureComponent2D.h"
 #include "Materials/MaterialInstanceDynamic.h"
+
+#if WITH_LIBMONGO
+#include "bson.h"
+#include "mongoc.h"
+#endif //WITH_LIBMONGO
+
 #include "UVCamera.generated.h"
 
 /**
@@ -24,83 +28,86 @@ class UVISIONLOGGER_API AUVCamera : public ACameraActor
 	GENERATED_BODY()
 public:
 	AUVCamera();
+
 	~AUVCamera();
+
 	//Set UVCamera id
 	UPROPERTY(EditAnyWhere, Category = "Vision Settings")
-		FString CameraId;
+	FString CameraId;
+
 	//Set UVCamera follow first player view
 	UPROPERTY(EditAnyWhere, Category = "Vision Settings")
-		bool bFirstPersonView;
+	bool bFirstPersonView;
 
 	// Set Caputure Image Size the same as Viewport Size
 	UPROPERTY(EditAnywhere, Category = "Vision Settings")
-		bool bImageSameSize;
+	bool bImageSameSize;
 
 	// Camera Width
 	UPROPERTY(EditAnywhere, Category = "Vision Settings")
-		uint32 Width;
+	uint32 Width;
 
 	// Camera Height
 	UPROPERTY(EditAnywhere, Category = "Vision Settings")
-		uint32 Height;
+	uint32 Height;
 
 	// Camera field of view
 	UPROPERTY(EditAnywhere, Category = "Vision Settings")
-		float FieldOfView;
+	float FieldOfView;
 
 	// Camera update rate
 	UPROPERTY(EditAnywhere, Category = "Vision Settings")
-		float FrameRate;
+	float FrameRate;
 
 	// Capture Color image
 	UPROPERTY(EditAnywhere, Category = "Vision Settings|Capture Mode")
-		bool bCaptureColorImage;
+	bool bCaptureColorImage;
 
 	// Capture Depth image
 	UPROPERTY(EditAnywhere, Category = "Vision Settings|Capture Mode")
-		bool bCaptureDepthImage;
+	bool bCaptureDepthImage;
 
 	// Capture Mask image
 	UPROPERTY(EditAnywhere, Category = "Vision Settings|Capture Mode")
-		bool bCaptureMaskImage;
+	bool bCaptureMaskImage;
 
 	// Capture Normal image
 	UPROPERTY(EditAnywhere, Category = "Vision Settings|Capture Mode")
-		bool bCaptureNormalImage;
+	bool bCaptureNormalImage;
 
 	// CaptureViewport
 	UPROPERTY(EditAnywhere, Category = "Vision Settings|Capture Mode|Color Mode", meta = (EditCondition = bCaptureColorImage))
-		bool bCaptureViewport;
+	bool bCaptureViewport;
 	UPROPERTY(EditAnywhere, Category = "Vision Settings|Capture Mode|Color Mode", meta = (EditCondition = bCaptureColorImage))
-		bool bCaptureScencComponent;
+	bool bCaptureScencComponent;
 
 	// Save data as image
 	UPROPERTY(EditAnywhere, Category = "Vision Settings|Capture Mode|Save Mode")
-		bool bSaveAsImage;
+	bool bSaveAsImage;
 
 	// Save All in one bson file
 	UPROPERTY(EditAnyWhere, Category = "Vision Settings|Capture Mode|Save Mode")
-		bool bSaveAsBsonFile;
+	bool bSaveAsBsonFile;
 
 	// Save All in MongoDB
 	UPROPERTY(EditAnyWhere, Category = "Vision Settings|Capture Mode|Save Mode")
-		bool bSaveInMongoDB;
+	bool bSaveInMongoDB;
 
 	// Mongo DB IP 
 	UPROPERTY(EditAnywhere, Category = "Vision Settings|Capture Mode|Save Mode|MongoDB", meta = (EditCondition = bSaveInMongoDB))
-		FString MongoIp;
+	FString MongoIp;
 
 	// Mongo DB port
 	UPROPERTY(EditAnywhere, Category = "Vision Settings|Capture Mode|Save Mode|MongoDB", meta = (EditCondition = bSaveInMongoDB))
-		int MongoPort;
+	int MongoPort;
 
 	// Mongo DB Name
 	UPROPERTY(EditAnywhere, Category = "Vision Settings|Capture Mode|Save Mode|MongoDB", meta = (EditCondition = bSaveInMongoDB))
-		FString MongoDBName;
+	FString MongoDBName;
 
 	// Mongo DB Collection name
 	UPROPERTY(EditAnywhere, Category = "Vision Settings|Capture Mode|Save Mode|MongoDB", meta = (EditCondition = bSaveInMongoDB))
-		FString MongoCollectionName;
+	FString MongoCollectionName;
 
 
 
@@ -180,7 +187,7 @@ private:
 
 	FRenderCommandFence PixelFence;
 
-
+#if WITH_LIBMONGO
 	// Pointer to monge database
 	mongoc_client_t *client;
 	mongoc_database_t *database;
@@ -195,6 +202,7 @@ private:
 	bson_writer_t *writer_color;
 	uint8_t *buf_color;
 	size_t buflen_color;
+#endif //WITH_LIBMONGO
 
 	// Intial Asynctask
 	bool bInitialAsyncTask;
@@ -289,7 +297,5 @@ private:
 	IFileHandle* FileHandle;
 
 	// File handle to write the raw data to file
-	IFileHandle* MaskColorFileHandle;
-
-	
+	IFileHandle* MaskColorFileHandle;	
 };

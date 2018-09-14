@@ -10,7 +10,6 @@ public class UVisionLogger : ModuleRules
 		
 		PublicIncludePaths.AddRange(
 			new string[] {
-				"UVisionLogger/Public"
 				// ... add public include paths required here ...
 			}
 			);
@@ -18,7 +17,6 @@ public class UVisionLogger : ModuleRules
 		
 		PrivateIncludePaths.AddRange(
 			new string[] {
-				"UVisionLogger/Private",
 				// ... add other private include paths required here ...
 			}
 			);
@@ -28,7 +26,6 @@ public class UVisionLogger : ModuleRules
 			new string[]
 			{
 				"Core",
-                
 				// ... add other public dependencies that you statically link with here ...
 			}
 			);
@@ -41,15 +38,14 @@ public class UVisionLogger : ModuleRules
 				"Engine",
 				"Slate",
 				"SlateCore",
-                "RHI",
-                "RenderCore",
-                "UnrealEd",
-                "libmongo",
-            
-                
+				"RHI",
+				"RenderCore",
+				"UnrealEd",
+				//"libmongo",
 				// ... add private dependencies that you statically link with here ...	
 			}
 			);
+		PublicDefinitions.Add("WITH_LIBMONGO=0");
 		
 		
 		DynamicallyLoadedModuleNames.AddRange(

@@ -1,7 +1,6 @@
-// Copyright 1998-2018 Epic Games, Inc. All Rights Reserved.
+// Copyright 2018, Institute for Artificial Intelligence - University of Bremen
 
 #include "UVisionLogger.h"
-#include "bson.h"
 
 #define LOCTEXT_NAMESPACE "FUVisionLoggerModule"
 

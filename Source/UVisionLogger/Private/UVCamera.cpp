@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+// Copyright 2018, Institute for Artificial Intelligence - University of Bremen
 
 #include "UVCamera.h"
 #include "ConstructorHelpers.h"
@@ -190,6 +190,7 @@ void AUVCamera::Tick(float DeltaTime)
 void AUVCamera::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
 	Super::EndPlay(EndPlayReason);
+#if WITH_LIBMONGO
 	//StopAsyncTask(ColorAsyncWorker);
 	if (bConnectionMongo) {
 		mongoc_collection_destroy(collection);
@@ -208,6 +209,7 @@ void AUVCamera::EndPlay(const EEndPlayReason::Type EndPlayReason)
 			MaskColorFileHandle->Write((uint8*)buf_color, (int64)buflen_color);
 		}
 	}
+#endif //WITH_LIBMONGO
 	
 }
 
@@ -220,6 +222,7 @@ void AUVCamera::Initial()
 	static IImageWrapperModule& ImageWrapperModule = FModuleManager::LoadModuleChecked<IImageWrapperModule>(FName("ImageWrapper"));
 	ImageWrapper = ImageWrapperModule.CreateImageWrapper(EImageFormat::JPEG);
 
+#if WITH_LIBMONGO
 	if (bSaveInMongoDB) {
 		bConnectionMongo=ConnectMongo(MongoIp, MongoPort, MongoDBName, MongoCollectionName);
 	}
@@ -228,6 +231,7 @@ void AUVCamera::Initial()
 		writer = bson_writer_new(&buf, &buflen, 0, bson_realloc_ctx, NULL);
 		SetFileHandle(FolderName);
 	}
+#endif //WITH_LIBMONGO
 	if (bImageSameSize)
 	{
 		ColorViewport = GetWorld()->GetGameViewport()->Viewport;
@@ -266,7 +270,9 @@ void AUVCamera::Initial()
 	}
 
 	if (bCaptureMaskImage) {
+#if WITH_LIBMONGO
 		writer_color = bson_writer_new(&buf_color, &buflen_color, 0, bson_realloc_ctx, NULL);
+#endif //WITH_LIBMONGO
 		if (ColorAllObjects()) {
 			UE_LOG(LogTemp, Warning, TEXT("All the objects has colored"));
 		}
@@ -366,7 +372,7 @@ void AUVCamera::TimerTick()
 				bNormalSave = true;
 			}
 		}
-
+#if WITH_LIBMONGO
 		if (bConnectionMongo)
 		{
 			SaveImageInMongo(Stamp);
@@ -384,6 +390,7 @@ void AUVCamera::TimerTick()
 			if (bCaptureMaskImage) { bMaskSave = true; }
 			if (bCaptureNormalImage) { bNormalSave = true; }
 		}
+#endif //WITH_LIBMONGO
 	}
 	if (bFirsttick)
 	{
@@ -566,6 +573,7 @@ void AUVCamera::ReadPixels(FTextureRenderTargetResource *& RenderResource, TArra
 }
 bool AUVCamera::ConnectMongo(FString & MongoIp, int & MongoPort, FString & MongoDBName, FString & MongoCollection)
 {
+#if WITH_LIBMONGO
 	FString Furi_str = TEXT("mongodb://") + MongoIp + TEXT(":") + FString::FromInt(MongoPort);
 	std::string uri_str(TCHAR_TO_UTF8(*Furi_str));
 	std::string database_name(TCHAR_TO_UTF8(*MongoDBName));
@@ -594,11 +602,12 @@ bool AUVCamera::ConnectMongo(FString & MongoIp, int & MongoPort, FString & Mongo
 		UE_LOG(LogTemp, Warning, TEXT("Database connection failed"));
 		return false;
 	}
+#endif //WITH_LIBMONGO
 	return false;
 }
-
 void AUVCamera::SaveImageInMongo(FDateTime Stamp)
 {
+#if WITH_LIBMONGO
 	FString TimeStamp = FString::FromInt(Stamp.GetYear()) + "_" + FString::FromInt(Stamp.GetMonth()) + "_" + FString::FromInt(Stamp.GetDay())
 		+ "_" + FString::FromInt(Stamp.GetHour()) + "_" + FString::FromInt(Stamp.GetMinute()) + "_" + FString::FromInt(Stamp.GetSecond()) + "_" +
 		FString::FromInt(Stamp.GetMillisecond());
@@ -731,10 +740,12 @@ void AUVCamera::SaveImageInMongo(FDateTime Stamp)
 		UE_LOG(LogTemp, Warning, TEXT("Save Image In MongoDB"));
 	}
 	bson_destroy(doc);
+#endif //WITH_LIBMONGO
 }
 
 void AUVCamera::SaveImageAsBson(FDateTime Stamp)
 {
+#if WITH_LIBMONGO
 	bson_t *doc;
 	TArray<uint8_t>Fbuf;
 	bool RBuf;
@@ -859,6 +870,7 @@ void AUVCamera::SaveImageAsBson(FDateTime Stamp)
 		delete[] imagedata;
 	}
 	bson_writer_end(writer);
+#endif //WITH_LIBMONGO
 }
 
 bool AUVCamera::ColorAllObjects()
@@ -881,7 +893,7 @@ bool AUVCamera::ColorAllObjects()
 
 	UE_LOG(LogTemp, Warning, TEXT("Found %d Actor Categories."), NumberOfActors);
 	GenerateColors(NumberOfActors);
-
+#if WITH_LIBMONGO
 	bson_t *doc;
 	TArray<uint8_t>Fbuf;
 	bool RBuf;
@@ -940,7 +952,7 @@ bool AUVCamera::ColorAllObjects()
 	}
 	bson_append_document_end(doc, &child);
 	bson_writer_end(writer_color);
-
+#endif //WITH_LIBMONGO
 	return true;
 }
 
