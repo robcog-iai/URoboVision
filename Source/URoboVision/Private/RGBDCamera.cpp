@@ -17,6 +17,7 @@
 #include <condition_variable>
 
 
+
 // Private data container so that internal structures are not visible to the outside
 class UROBOVISION_API ARGBDCamera::PrivateData
 {
@@ -56,8 +57,7 @@ ARGBDCamera::ARGBDCamera() /*: ACameraActor(), Width(960), Height(540), Framerat
 	ColorImgCaptureComp->TextureTarget = CreateDefaultSubobject<UTextureRenderTarget2D>(TEXT("ColorTarget"));
 	ColorImgCaptureComp->TextureTarget->InitAutoFormat(Width, Height);
 	ColorImgCaptureComp->FOVAngle = FieldOfView;
-	//Color->TextureTarget->TargetGamma = GEngine->GetDisplayGamma();
-
+	
 	DepthImgCaptureComp = CreateDefaultSubobject<USceneCaptureComponent2D>(TEXT("DepthCapture"));
 	DepthImgCaptureComp->SetupAttachment(RootComponent);
 	DepthImgCaptureComp->CaptureSource = ESceneCaptureSource::SCS_FinalColorLDR;
@@ -155,6 +155,7 @@ void ARGBDCamera::BeginPlay()
 		ColorImgCaptureComp->SetHiddenInGame(false);
 		ColorImgCaptureComp->Activate();
 		bCompActive = true;
+		ColorImgCaptureComp->TextureTarget->TargetGamma = GEngine->GetDisplayGamma();
 		Priv->ThreadColor = std::thread(&ARGBDCamera::ProcessColor, this);
 	}
 	if (bCaptureDepthImage)
@@ -244,7 +245,7 @@ void ARGBDCamera::Tick(float DeltaTime)
 
 	// Read color image and notify processing thread
 	Priv->WaitColor.lock();
-	ReadImage(ColorImgCaptureComp->TextureTarget, ImageColor);
+	ReadColorImage(ColorImgCaptureComp->TextureTarget, ImageColor);
 	Priv->WaitColor.unlock();
 	Priv->DoColor = true;
 	Priv->CVColor.notify_one();
@@ -379,6 +380,19 @@ void ARGBDCamera::ReadImage(UTextureRenderTarget2D *RenderTarget, TArray<FFloat1
 	RenderTargetResource->ReadFloat16Pixels(ImageData);
 }
 
+void ARGBDCamera::ReadColorImage(UTextureRenderTarget2D *RenderTarget, TArray<FColor> &ImageData) const
+{
+
+	int32 Width = RenderTarget->SizeX, Height = RenderTarget->SizeY;
+	FTextureRenderTargetResource* RenderTargetResource;
+	ImageData.AddZeroed(Width * Height);
+	RenderTargetResource = RenderTarget->GameThread_GetRenderTargetResource();
+	FReadSurfaceDataFlags ReadSurfaceDataFlags;
+	ReadSurfaceDataFlags.SetLinearToGamma(false); // This is super important to disable this!
+	// Instead of using this flag, we will set the gamma to the correct value directly
+	RenderTargetResource->ReadPixels(ImageData, ReadSurfaceDataFlags);
+}
+
 void ARGBDCamera::ToColorImage(const TArray<FFloat16Color> &ImageData, uint8 *Bytes) const
 {
 	const FFloat16Color *itI = ImageData.GetData();
@@ -390,6 +404,22 @@ void ARGBDCamera::ToColorImage(const TArray<FFloat16Color> &ImageData, uint8 *By
 		*itO = (uint8_t)std::round((float)itI->B * 255.f);
 		*++itO = (uint8_t)std::round((float)itI->G * 255.f);
 		*++itO = (uint8_t)std::round((float)itI->R * 255.f);
+	}
+	return;
+}
+
+
+void ARGBDCamera::ToColorRGBImage(const TArray<FColor> &ImageData, uint8 *Bytes) const
+{
+	const FColor *itI = ImageData.GetData();
+	uint8_t *itO = Bytes;
+
+	// Converts Float colors to bytes
+	for(size_t i = 0; i < ImageData.Num(); ++i, ++itI, ++itO)
+	{
+		*itO = (uint8_t)itI->B;
+		*++itO = (uint8_t)itI->G;
+		*++itO = (uint8_t)itI->R;
 	}
 	return;
 }
@@ -561,7 +591,7 @@ void ARGBDCamera::ProcessColor()
 		Priv->CVColor.wait(WaitLock, [this] {return Priv->DoColor; });
 		Priv->DoColor = false;
 		if(!this->Running) break;
-		ToColorImage(ImageColor, Priv->Buffer->Color);
+		ToColorRGBImage(ImageColor, Priv->Buffer->Color);
 
 		Priv->DoneColor = true;
 		Priv->CVDone.notify_one();

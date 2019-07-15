@@ -93,11 +93,11 @@ private:
 	bool bCompActive;
 
 	// Buffers for reading the data from the GPU
-	TArray<FFloat16Color> ImageColor, ImageDepth, ImageObject;
+	TArray<FFloat16Color>  ImageDepth, ImageObject;
 
 	float FrameTime, TimePassed;
 	TArray<uint8> DataColor, DataDepth, DataObject;
-	TArray<FColor> ObjectColors;
+	TArray<FColor>ImageColor, ObjectColors;
 	TMap<FString, uint32> ObjectToColor;
 	uint32 ColorsUsed;
 	bool Running, Paused;
@@ -107,7 +107,9 @@ private:
 	void ShowFlagsPostProcess(FEngineShowFlags &ShowFlags) const;
 	void ShowFlagsVertexColor(FEngineShowFlags &ShowFlags) const;
 	void ReadImage(UTextureRenderTarget2D *RenderTarget, TArray<FFloat16Color> &ImageData) const;
+        void ReadColorImage(UTextureRenderTarget2D *RenderTarget, TArray<FColor> &ImageData) const;
 	void ToColorImage(const TArray<FFloat16Color> &ImageData, uint8 *Bytes) const;
+        void ToColorRGBImage(const TArray<FColor> &ImageData, uint8 *Bytes) const;
 	void ToDepthImage(const TArray<FFloat16Color> &ImageData, uint8 *Bytes) const;
 	void StoreImage(const uint8 *ImageData, const uint32 Size, const char *Name) const;
 	void GenerateColors(const uint32_t NumberOfColors);
