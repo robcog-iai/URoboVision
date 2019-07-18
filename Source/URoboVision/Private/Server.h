@@ -26,7 +26,7 @@ public:
   TCPServer();
   ~TCPServer();
 
-  void Start(const int32 ServerPort);
+  void Start(const int32 ServerPort, bool BindToAnyIp);
   void Stop();
 
   bool HasClient() const;

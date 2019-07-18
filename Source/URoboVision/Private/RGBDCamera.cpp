@@ -88,6 +88,7 @@ ARGBDCamera::ARGBDCamera() /*: ACameraActor(), Width(960), Height(540), Framerat
 	
 	// TCP IP communication server port
 	ServerPort = 10000;
+  bBindToAnyIP = true;
 
 	// Setting flags for each camera
 	ShowFlagsLit(ColorImgCaptureComp->ShowFlags);
@@ -134,7 +135,7 @@ void ARGBDCamera::BeginPlay()
 	OUT_INFO(TEXT("Begin play!"));
 
 	// Starting server
-	Priv->Server.Start(ServerPort);
+	Priv->Server.Start(ServerPort, bBindToAnyIP);
 
 	// Coloring all objects
 	ColorAllObjects();
