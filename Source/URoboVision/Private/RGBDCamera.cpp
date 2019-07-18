@@ -88,7 +88,7 @@ ARGBDCamera::ARGBDCamera() /*: ACameraActor(), Width(960), Height(540), Framerat
 	
 	// TCP IP communication server port
 	ServerPort = 10000;
-  bBindToAnyIP = true;
+	bBindToAnyIP = true;
 
 	// Setting flags for each camera
 	ShowFlagsLit(ColorImgCaptureComp->ShowFlags);
