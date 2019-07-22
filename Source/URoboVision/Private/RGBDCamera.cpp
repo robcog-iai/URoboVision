@@ -15,7 +15,7 @@
 #include <mutex>
 #include <cmath>
 #include <condition_variable>
-
+#include "AnnotationComponent.h"
 
 
 // Private data container so that internal structures are not visible to the outside
@@ -495,15 +495,15 @@ void ARGBDCamera::GenerateColors(const uint32_t NumberOfColors)
 			{
 				HSVColor.R = ((h * ShiftHue) % MaxHue) * StepHue;
 				ObjectColors.Add(HSVColor.HSVToLinearRGB().ToFColor(false));
-				OUT_INFO(TEXT("Added color %d: %d %d %d"), ObjectColors.Num(), ObjectColors.Last().R, ObjectColors.Last().G, ObjectColors.Last().B);
+				OUT_INFO(TEXT("Added color %d: %d %d %d"), ObjectColors.Num(), ObjectColors.Last().B, ObjectColors.Last().G, ObjectColors.Last().R);
 			}
 		}
 	}
 }
 
-bool ARGBDCamera::ColorObject(AActor *Actor, const FString &name)
+/*bool ARGBDCamera::ColorObject(AActor *Actor, const FString &name)
 {
-	const FColor &ObjectColor = ObjectColors[ObjectToColor[name]];
+	FColor &ObjectColor = ObjectColors[ObjectToColor[name]];
 	TArray<UMeshComponent *> PaintableComponents;
 	Actor->GetComponents<UMeshComponent>(PaintableComponents);
 
@@ -530,7 +530,7 @@ bool ARGBDCamera::ColorObject(AActor *Actor, const FString &name)
 					InstanceMeshLODInfo->OverrideVertexColors = new FColorVertexBuffer;
 
 					FColor FillColor = FColor(255, 255, 255, 255);
-					InstanceMeshLODInfo->OverrideVertexColors->InitFromSingleColor(FColor::White, LODModel.GetNumVertices());
+					InstanceMeshLODInfo->OverrideVertexColors->InitFromSingleColor(FillColor, LODModel.GetNumVertices());
 				}
 
 				uint32 NumVertices = LODModel.GetNumVertices();
@@ -541,6 +541,7 @@ bool ARGBDCamera::ColorObject(AActor *Actor, const FString &name)
 				{
 					uint32 NumOverrideVertexColors = InstanceMeshLODInfo->OverrideVertexColors->GetNumVertices();
 					uint32 NumPaintedVertices = InstanceMeshLODInfo->PaintedVertices.Num();
+					ObjectColor.A=255;
 					InstanceMeshLODInfo->OverrideVertexColors->VertexColor(ColorIndex) = ObjectColor;
 				}
 				BeginInitResource(InstanceMeshLODInfo->OverrideVertexColors);
@@ -549,7 +550,43 @@ bool ARGBDCamera::ColorObject(AActor *Actor, const FString &name)
 		}
 	}
 	return true;
+}*/
+
+
+//************
+
+
+bool ARGBDCamera::ColorObject(AActor *Actor, const FString &name)
+{
+	
+        FColor &AnnotationColor = ObjectColors[ObjectToColor[name]];
+        AnnotationColor.A=(uint8_t)255;
+	if (!IsValid(Actor))
+	{
+		return false;
+	}
+	TArray<UActorComponent*> AnnotationComponents = Actor->GetComponentsByClass(UAnnotationComponent::StaticClass());
+	if (AnnotationComponents.Num() != 0)
+	{
+		return false;
+	}
+
+	TArray<UActorComponent*> MeshComponents = Actor->GetComponentsByClass(UMeshComponent::StaticClass());
+	for (UActorComponent* Component : MeshComponents)
+	{
+		UMeshComponent* MeshComponent = Cast<UMeshComponent>(Component);
+		UAnnotationComponent* AnnotationComponent = NewObject<UAnnotationComponent>(MeshComponent);
+		AnnotationComponent->SetupAttachment(MeshComponent);
+		AnnotationComponent->RegisterComponent();
+		AnnotationComponent->SetAnnotationColor(AnnotationColor); 
+		AnnotationComponent->MarkRenderStateDirty();
+	}
+        return true;
 }
+
+
+//***************************
+
 
 bool ARGBDCamera::ColorAllObjects()
 {
@@ -591,7 +628,7 @@ void ARGBDCamera::ProcessColor()
 		Priv->CVColor.wait(WaitLock, [this] {return Priv->DoColor; });
 		Priv->DoColor = false;
 		if(!this->Running) break;
-		ToColorRGBImage(ImageColor, Priv->Buffer->Color);
+		ToColorRGBImage(ImageColor, Priv->Buffer->Object);
 
 		Priv->DoneColor = true;
 		Priv->CVDone.notify_one();
@@ -628,8 +665,8 @@ void ARGBDCamera::ProcessObject()
 		Priv->CVObject.wait(WaitLock, [this] {return Priv->DoObject; });
 		Priv->DoObject = false;
 		if(!this->Running) break;
-		ToColorImage(ImageObject, Priv->Buffer->Object);
-
+		//ToColorImage(ImageObject, Priv->Buffer->Object);
+		ToColorImage(ImageObject, Priv->Buffer->Color);	
 		Priv->DoneObject = true;
 		Priv->CVDone.notify_one();
 	}
