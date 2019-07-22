@@ -628,7 +628,7 @@ void ARGBDCamera::ProcessColor()
 		Priv->CVColor.wait(WaitLock, [this] {return Priv->DoColor; });
 		Priv->DoColor = false;
 		if(!this->Running) break;
-		ToColorRGBImage(ImageColor, Priv->Buffer->Object);
+		ToColorRGBImage(ImageColor, Priv->Buffer->Color);
 
 		Priv->DoneColor = true;
 		Priv->CVDone.notify_one();
@@ -665,8 +665,7 @@ void ARGBDCamera::ProcessObject()
 		Priv->CVObject.wait(WaitLock, [this] {return Priv->DoObject; });
 		Priv->DoObject = false;
 		if(!this->Running) break;
-		//ToColorImage(ImageObject, Priv->Buffer->Object);
-		ToColorImage(ImageObject, Priv->Buffer->Color);	
+		ToColorImage(ImageObject, Priv->Buffer->Object);	
 		Priv->DoneObject = true;
 		Priv->CVDone.notify_one();
 	}
