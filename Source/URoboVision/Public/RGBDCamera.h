@@ -60,6 +60,15 @@ public:
 	UPROPERTY(EditAnywhere, Category = "RGB-D Settings")
 	int32 ServerPort;
 
+	// Create the server port on 0.0.0.0
+	// By enabling this, you can connect to the server
+	// via your 127.0.0.1 or your 'real' ip like 192....
+	// Please be aware that binding to 0.0.0.0 will
+	// allow connections from any network adapter
+	// on your system
+	UPROPERTY(EditAnywhere, Category = "RGB-D Settings")
+	bool bBindToAnyIP;
+
 	// Capture color image
 	UPROPERTY(EditAnywhere, Category = "RGB-D Settings")
 	bool bCaptureColorImage;

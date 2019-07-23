@@ -16,7 +16,7 @@ TCPServer::~TCPServer()
   }
 }
 
-void TCPServer::Start(const int32 ServerPort)
+void TCPServer::Start(const int32 ServerPort, bool BindToAnyIp)
 {
   OUT_INFO(TEXT("Starting server."));
 
@@ -31,6 +31,17 @@ void TCPServer::Start(const int32 ServerPort)
   bool bCanBind = false;
   TSharedRef<FInternetAddr> LocalIP = ISocketSubsystem::Get(PLATFORM_SOCKETSUBSYSTEM)->GetLocalHostAddr(*GLog, bCanBind);
   LocalIP->SetPort(ServerPort);
+
+  if(BindToAnyIp)
+  {
+    bool isValid;
+    LocalIP->SetIp(TEXT("0.0.0.0"),isValid);
+    if(!isValid)
+    {
+      OUT_ERROR(TEXT("Coulnd't force address to 0.0.0.0"));
+    }
+  }
+
   OUT_INFO(TEXT("Server address: %s"), *LocalIP->ToString(true));
 
   ListenSocket = ISocketSubsystem::Get(PLATFORM_SOCKETSUBSYSTEM)->CreateSocket(NAME_Stream, TEXT("Server Listening Socket"), false);
