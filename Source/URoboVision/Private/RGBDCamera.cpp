@@ -15,6 +15,7 @@
 #include <mutex>
 #include <cmath>
 #include <condition_variable>
+#include "SegmentationComponent.h"
 
 
 // Private data container so that internal structures are not visible to the outside
@@ -56,8 +57,7 @@ ARGBDCamera::ARGBDCamera() /*: ACameraActor(), Width(960), Height(540), Framerat
 	ColorImgCaptureComp->TextureTarget = CreateDefaultSubobject<UTextureRenderTarget2D>(TEXT("ColorTarget"));
 	ColorImgCaptureComp->TextureTarget->InitAutoFormat(Width, Height);
 	ColorImgCaptureComp->FOVAngle = FieldOfView;
-	//Color->TextureTarget->TargetGamma = GEngine->GetDisplayGamma();
-
+	
 	DepthImgCaptureComp = CreateDefaultSubobject<USceneCaptureComponent2D>(TEXT("DepthCapture"));
 	DepthImgCaptureComp->SetupAttachment(RootComponent);
 	DepthImgCaptureComp->CaptureSource = ESceneCaptureSource::SCS_FinalColorLDR;
@@ -156,6 +156,7 @@ void ARGBDCamera::BeginPlay()
 		ColorImgCaptureComp->SetHiddenInGame(false);
 		ColorImgCaptureComp->Activate();
 		bCompActive = true;
+		ColorImgCaptureComp->TextureTarget->TargetGamma = GEngine->GetDisplayGamma();
 		Priv->ThreadColor = std::thread(&ARGBDCamera::ProcessColor, this);
 	}
 	if (bCaptureDepthImage)
@@ -245,7 +246,7 @@ void ARGBDCamera::Tick(float DeltaTime)
 
 	// Read color image and notify processing thread
 	Priv->WaitColor.lock();
-	ReadImage(ColorImgCaptureComp->TextureTarget, ImageColor);
+	ReadColorImage(ColorImgCaptureComp->TextureTarget, ImageColor);
 	Priv->WaitColor.unlock();
 	Priv->DoColor = true;
 	Priv->CVColor.notify_one();
@@ -380,6 +381,19 @@ void ARGBDCamera::ReadImage(UTextureRenderTarget2D *RenderTarget, TArray<FFloat1
 	RenderTargetResource->ReadFloat16Pixels(ImageData);
 }
 
+void ARGBDCamera::ReadColorImage(UTextureRenderTarget2D *RenderTarget, TArray<FColor> &ImageData) const
+{
+
+	int32 Width = RenderTarget->SizeX, Height = RenderTarget->SizeY;
+	FTextureRenderTargetResource* RenderTargetResource;
+	ImageData.AddZeroed(Width * Height);
+	RenderTargetResource = RenderTarget->GameThread_GetRenderTargetResource();
+	FReadSurfaceDataFlags ReadSurfaceDataFlags;
+	ReadSurfaceDataFlags.SetLinearToGamma(false); // This is super important to disable this!
+	// Instead of using this flag, we will set the gamma to the correct value directly
+	RenderTargetResource->ReadPixels(ImageData, ReadSurfaceDataFlags);
+}
+
 void ARGBDCamera::ToColorImage(const TArray<FFloat16Color> &ImageData, uint8 *Bytes) const
 {
 	const FFloat16Color *itI = ImageData.GetData();
@@ -391,6 +405,22 @@ void ARGBDCamera::ToColorImage(const TArray<FFloat16Color> &ImageData, uint8 *By
 		*itO = (uint8_t)std::round((float)itI->B * 255.f);
 		*++itO = (uint8_t)std::round((float)itI->G * 255.f);
 		*++itO = (uint8_t)std::round((float)itI->R * 255.f);
+	}
+	return;
+}
+
+
+void ARGBDCamera::ToColorRGBImage(const TArray<FColor> &ImageData, uint8 *Bytes) const
+{
+	const FColor *itI = ImageData.GetData();
+	uint8_t *itO = Bytes;
+
+	// Converts Float colors to bytes
+	for(size_t i = 0; i < ImageData.Num(); ++i, ++itI, ++itO)
+	{
+		*itO = (uint8_t)itI->B;
+		*++itO = (uint8_t)itI->G;
+		*++itO = (uint8_t)itI->R;
 	}
 	return;
 }
@@ -466,61 +496,46 @@ void ARGBDCamera::GenerateColors(const uint32_t NumberOfColors)
 			{
 				HSVColor.R = ((h * ShiftHue) % MaxHue) * StepHue;
 				ObjectColors.Add(HSVColor.HSVToLinearRGB().ToFColor(false));
-				OUT_INFO(TEXT("Added color %d: %d %d %d"), ObjectColors.Num(), ObjectColors.Last().R, ObjectColors.Last().G, ObjectColors.Last().B);
+				OUT_INFO(TEXT("Added color %d: %d %d %d"), ObjectColors.Num(), ObjectColors.Last().B, ObjectColors.Last().G, ObjectColors.Last().R);
 			}
 		}
 	}
 }
 
+/*
+ *
+ */
 bool ARGBDCamera::ColorObject(AActor *Actor, const FString &name)
 {
-	const FColor &ObjectColor = ObjectColors[ObjectToColor[name]];
-	TArray<UMeshComponent *> PaintableComponents;
-	Actor->GetComponents<UMeshComponent>(PaintableComponents);
-
-	for(auto MeshComponent : PaintableComponents)
+	
+        FColor &SegmentationColor = ObjectColors[ObjectToColor[name]];
+        SegmentationColor.A=(uint8_t)255;
+	if (!IsValid(Actor))
 	{
-		if(MeshComponent == nullptr)
-			continue;
-
-		if(UStaticMeshComponent *StaticMeshComponent = Cast<UStaticMeshComponent>(MeshComponent))
-		{
-			if(UStaticMesh *StaticMesh = StaticMeshComponent->GetStaticMesh())
-			{
-				uint32 PaintingMeshLODIndex = 0;
-				uint32 NumLODLevel = StaticMesh->RenderData->LODResources.Num();
-				//check(NumLODLevel == 1);
-				FStaticMeshLODResources &LODModel = StaticMesh->RenderData->LODResources[PaintingMeshLODIndex];
-				FStaticMeshComponentLODInfo *InstanceMeshLODInfo = NULL;
-
-				// PaintingMeshLODIndex + 1 is the minimum requirement, enlarge if not satisfied
-				StaticMeshComponent->SetLODDataCount(PaintingMeshLODIndex + 1, StaticMeshComponent->LODData.Num());
-				InstanceMeshLODInfo = &StaticMeshComponent->LODData[PaintingMeshLODIndex];
-
-				{
-					InstanceMeshLODInfo->OverrideVertexColors = new FColorVertexBuffer;
-
-					FColor FillColor = FColor(255, 255, 255, 255);
-					InstanceMeshLODInfo->OverrideVertexColors->InitFromSingleColor(FColor::White, LODModel.GetNumVertices());
-				}
-
-				uint32 NumVertices = LODModel.GetNumVertices();
-				//check(InstanceMeshLODInfo->OverrideVertexColors);
-				//check(NumVertices <= InstanceMeshLODInfo->OverrideVertexColors->GetNumVertices());
-
-				for(uint32 ColorIndex = 0; ColorIndex < NumVertices; ++ColorIndex)
-				{
-					uint32 NumOverrideVertexColors = InstanceMeshLODInfo->OverrideVertexColors->GetNumVertices();
-					uint32 NumPaintedVertices = InstanceMeshLODInfo->PaintedVertices.Num();
-					InstanceMeshLODInfo->OverrideVertexColors->VertexColor(ColorIndex) = ObjectColor;
-				}
-				BeginInitResource(InstanceMeshLODInfo->OverrideVertexColors);
-				StaticMeshComponent->MarkRenderStateDirty();
-			}
-		}
+		return false;
 	}
-	return true;
+	TArray<UActorComponent*> SegmentationComponents = Actor->GetComponentsByClass(USegmentationComponent::StaticClass());
+	if (SegmentationComponents.Num() != 0)
+	{
+		return false;
+	}
+
+	TArray<UActorComponent*> MeshComponents = Actor->GetComponentsByClass(UMeshComponent::StaticClass());
+	for (UActorComponent* Component : MeshComponents)
+	{
+		UMeshComponent* MeshComponent = Cast<UMeshComponent>(Component);
+		USegmentationComponent* SegmentationComponent = NewObject<USegmentationComponent>(MeshComponent);
+		SegmentationComponent->SetupAttachment(MeshComponent);
+		SegmentationComponent->RegisterComponent();
+		SegmentationComponent->SetSegmentationColor(SegmentationColor); 
+		SegmentationComponent->MarkRenderStateDirty();
+	}
+        return true;
 }
+
+
+//***************************
+
 
 bool ARGBDCamera::ColorAllObjects()
 {
@@ -562,7 +577,7 @@ void ARGBDCamera::ProcessColor()
 		Priv->CVColor.wait(WaitLock, [this] {return Priv->DoColor; });
 		Priv->DoColor = false;
 		if(!this->Running) break;
-		ToColorImage(ImageColor, Priv->Buffer->Color);
+		ToColorRGBImage(ImageColor, Priv->Buffer->Color);
 
 		Priv->DoneColor = true;
 		Priv->CVDone.notify_one();
@@ -599,8 +614,7 @@ void ARGBDCamera::ProcessObject()
 		Priv->CVObject.wait(WaitLock, [this] {return Priv->DoObject; });
 		Priv->DoObject = false;
 		if(!this->Running) break;
-		ToColorImage(ImageObject, Priv->Buffer->Object);
-
+		ToColorImage(ImageObject, Priv->Buffer->Object);	
 		Priv->DoneObject = true;
 		Priv->CVDone.notify_one();
 	}
