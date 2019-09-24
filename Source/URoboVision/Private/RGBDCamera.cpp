@@ -15,7 +15,7 @@
 #include <mutex>
 #include <cmath>
 #include <condition_variable>
-#include "AnnotationComponent.h"
+#include "SegmentationComponent.h"
 
 
 // Private data container so that internal structures are not visible to the outside
@@ -501,72 +501,20 @@ void ARGBDCamera::GenerateColors(const uint32_t NumberOfColors)
 	}
 }
 
-/*bool ARGBDCamera::ColorObject(AActor *Actor, const FString &name)
-{
-	FColor &ObjectColor = ObjectColors[ObjectToColor[name]];
-	TArray<UMeshComponent *> PaintableComponents;
-	Actor->GetComponents<UMeshComponent>(PaintableComponents);
-
-	for(auto MeshComponent : PaintableComponents)
-	{
-		if(MeshComponent == nullptr)
-			continue;
-
-		if(UStaticMeshComponent *StaticMeshComponent = Cast<UStaticMeshComponent>(MeshComponent))
-		{
-			if(UStaticMesh *StaticMesh = StaticMeshComponent->GetStaticMesh())
-			{
-				uint32 PaintingMeshLODIndex = 0;
-				uint32 NumLODLevel = StaticMesh->RenderData->LODResources.Num();
-				//check(NumLODLevel == 1);
-				FStaticMeshLODResources &LODModel = StaticMesh->RenderData->LODResources[PaintingMeshLODIndex];
-				FStaticMeshComponentLODInfo *InstanceMeshLODInfo = NULL;
-
-				// PaintingMeshLODIndex + 1 is the minimum requirement, enlarge if not satisfied
-				StaticMeshComponent->SetLODDataCount(PaintingMeshLODIndex + 1, StaticMeshComponent->LODData.Num());
-				InstanceMeshLODInfo = &StaticMeshComponent->LODData[PaintingMeshLODIndex];
-
-				{
-					InstanceMeshLODInfo->OverrideVertexColors = new FColorVertexBuffer;
-
-					FColor FillColor = FColor(255, 255, 255, 255);
-					InstanceMeshLODInfo->OverrideVertexColors->InitFromSingleColor(FillColor, LODModel.GetNumVertices());
-				}
-
-				uint32 NumVertices = LODModel.GetNumVertices();
-				//check(InstanceMeshLODInfo->OverrideVertexColors);
-				//check(NumVertices <= InstanceMeshLODInfo->OverrideVertexColors->GetNumVertices());
-
-				for(uint32 ColorIndex = 0; ColorIndex < NumVertices; ++ColorIndex)
-				{
-					uint32 NumOverrideVertexColors = InstanceMeshLODInfo->OverrideVertexColors->GetNumVertices();
-					uint32 NumPaintedVertices = InstanceMeshLODInfo->PaintedVertices.Num();
-					ObjectColor.A=255;
-					InstanceMeshLODInfo->OverrideVertexColors->VertexColor(ColorIndex) = ObjectColor;
-				}
-				BeginInitResource(InstanceMeshLODInfo->OverrideVertexColors);
-				StaticMeshComponent->MarkRenderStateDirty();
-			}
-		}
-	}
-	return true;
-}*/
-
-
-//************
-
-
+/*
+ *
+ */
 bool ARGBDCamera::ColorObject(AActor *Actor, const FString &name)
 {
 	
-        FColor &AnnotationColor = ObjectColors[ObjectToColor[name]];
-        AnnotationColor.A=(uint8_t)255;
+        FColor &SegmentationColor = ObjectColors[ObjectToColor[name]];
+        SegmentationColor.A=(uint8_t)255;
 	if (!IsValid(Actor))
 	{
 		return false;
 	}
-	TArray<UActorComponent*> AnnotationComponents = Actor->GetComponentsByClass(UAnnotationComponent::StaticClass());
-	if (AnnotationComponents.Num() != 0)
+	TArray<UActorComponent*> SegmentationComponents = Actor->GetComponentsByClass(USegmentationComponent::StaticClass());
+	if (SegmentationComponents.Num() != 0)
 	{
 		return false;
 	}
@@ -575,11 +523,11 @@ bool ARGBDCamera::ColorObject(AActor *Actor, const FString &name)
 	for (UActorComponent* Component : MeshComponents)
 	{
 		UMeshComponent* MeshComponent = Cast<UMeshComponent>(Component);
-		UAnnotationComponent* AnnotationComponent = NewObject<UAnnotationComponent>(MeshComponent);
-		AnnotationComponent->SetupAttachment(MeshComponent);
-		AnnotationComponent->RegisterComponent();
-		AnnotationComponent->SetAnnotationColor(AnnotationColor); 
-		AnnotationComponent->MarkRenderStateDirty();
+		USegmentationComponent* SegmentationComponent = NewObject<USegmentationComponent>(MeshComponent);
+		SegmentationComponent->SetupAttachment(MeshComponent);
+		SegmentationComponent->RegisterComponent();
+		SegmentationComponent->SetSegmentationColor(SegmentationColor); 
+		SegmentationComponent->MarkRenderStateDirty();
 	}
         return true;
 }
