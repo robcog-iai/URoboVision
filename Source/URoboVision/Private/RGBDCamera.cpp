@@ -149,6 +149,26 @@ void ARGBDCamera::BeginPlay()
 	Priv->DoneColor = false;
 	Priv->DoneObject = false;
 
+        //Settings the right camera parameters from UE4 editor
+        
+        //Aspect Ratio
+        GetCameraComponent()->FieldOfView = this->FieldOfView;
+        GetCameraComponent()->AspectRatio = this->Width / (float)this->Height;
+
+        //Field of view
+        ColorImgCaptureComp->FOVAngle =this->FieldOfView;
+        DepthImgCaptureComp->FOVAngle = this->FieldOfView;
+        ObjectMaskImgCaptureComp->FOVAngle = this->FieldOfView;
+        
+        //Width
+        ColorImgCaptureComp->TextureTarget->SizeX=this->Width;
+        DepthImgCaptureComp->TextureTarget->SizeX=this->Width;
+        ObjectMaskImgCaptureComp->TextureTarget->SizeX=this->Width;
+        //Height
+        ColorImgCaptureComp->TextureTarget->SizeY=this->Height;
+        DepthImgCaptureComp->TextureTarget->SizeY=this->Height;
+        ObjectMaskImgCaptureComp->TextureTarget->SizeY=this->Height;
+        
 	// Starting threads to process image data
 	if (bCaptureColorImage)
 	{
