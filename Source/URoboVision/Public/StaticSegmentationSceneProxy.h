@@ -30,11 +30,9 @@ public:
 		int32 BatchIndex,
 		int32 ElementIndex,
 		uint8 InDepthPriorityGroup,
-		bool bUseSelectedMaterial,
-		bool bUseHoveredMaterial,
+		bool bUseSelectionOutline,
 		bool bAllowPreCulledIndices,
 		FMeshBatch & OutMeshBatch
 	) const override;
 	virtual FPrimitiveViewRelevance GetViewRelevance(const FSceneView * View) const override;
 };
-

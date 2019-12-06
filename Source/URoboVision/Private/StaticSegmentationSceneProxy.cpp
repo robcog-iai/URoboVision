@@ -5,7 +5,7 @@
 FStaticSegmentationSceneProxy::FStaticSegmentationSceneProxy(UStaticMeshComponent* Component, bool bForceLODsShareStaticLighting, UMaterialInterface* SegmentationMID) :
 		FStaticMeshSceneProxy(Component, bForceLODsShareStaticLighting)
 	{
-		MaterialRenderProxy = SegmentationMID->GetRenderProxy(false, false);
+		MaterialRenderProxy = SegmentationMID->GetRenderProxy();
 		this->MaterialRelevance = SegmentationMID->GetRelevance(GetScene().GetFeatureLevel());
 		this->bVerifyUsedMaterials = false;
 		bCastShadow = false;
@@ -16,7 +16,7 @@ FPrimitiveViewRelevance FStaticSegmentationSceneProxy::GetViewRelevance(const FS
 	if (View->Family->EngineShowFlags.Materials)
 	{
 		FPrimitiveViewRelevance ViewRelevance;
-		ViewRelevance.bDrawRelevance = 0; 
+		ViewRelevance.bDrawRelevance = 0;
 		return ViewRelevance;
 	}
 	else
@@ -40,14 +40,12 @@ bool FStaticSegmentationSceneProxy::GetMeshElement(
 	int32 BatchIndex,
 	int32 ElementIndex,
 	uint8 InDepthPriorityGroup,
-	bool bUseSelectedMaterial,
-	bool bUseHoveredMaterial,
+        bool bUseSelectionOutline,
 	bool bAllowPreCulledIndices,
 	FMeshBatch & OutMeshBatch) const
 {
 	bool Ret = FStaticMeshSceneProxy::GetMeshElement(LODIndex, BatchIndex, ElementIndex, InDepthPriorityGroup,
-		bUseSelectedMaterial, bUseHoveredMaterial, bAllowPreCulledIndices, OutMeshBatch);
+		bUseSelectionOutline, bAllowPreCulledIndices, OutMeshBatch);
 	OutMeshBatch.MaterialRenderProxy = this->MaterialRenderProxy;
 	return Ret;
 }
-
