@@ -30,7 +30,12 @@ public:
 		int32 BatchIndex,
 		int32 ElementIndex,
 		uint8 InDepthPriorityGroup,
+	#if (ENGINE_MINOR_VERSION >= 22)
 		bool bUseSelectionOutline,
+	#else
+		bool bUseSelectedMaterial,
+		bool bUseHoveredMaterial,
+	#endif
 		bool bAllowPreCulledIndices,
 		FMeshBatch & OutMeshBatch
 	) const override;
