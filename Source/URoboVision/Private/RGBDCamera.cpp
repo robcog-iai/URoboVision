@@ -84,8 +84,8 @@ ARGBDCamera::ARGBDCamera() /*: ACameraActor(), Width(960), Height(540), Framerat
 	ServerPort = 10000;
 	bBindToAnyIP = true;
 
-  bColorAllObjectsOnEveryTick = false;
-  bColoringObjectsIsVerbose = false;
+	bColorAllObjectsOnEveryTick = false;
+	bColoringObjectsIsVerbose = false;
 
 	// Setting flags for each camera
 	ShowFlagsLit(ColorImgCaptureComp->ShowFlags);
