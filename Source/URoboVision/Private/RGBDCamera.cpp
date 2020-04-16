@@ -84,6 +84,9 @@ ARGBDCamera::ARGBDCamera() /*: ACameraActor(), Width(960), Height(540), Framerat
 	ServerPort = 10000;
 	bBindToAnyIP = true;
 
+	bColorAllObjectsOnEveryTick = false;
+	bColoringObjectsIsVerbose = false;
+
 	// Setting flags for each camera
 	ShowFlagsLit(ColorImgCaptureComp->ShowFlags);
 	ShowFlagsPostProcess(DepthImgCaptureComp->ShowFlags);
@@ -228,6 +231,12 @@ void ARGBDCamera::Tick(float DeltaTime)
 	TimePassed -= 1.0f / Framerate;
 	//MEASURE_TIME("Tick");
 	//OUT_INFO(TEXT("FRAME_RATE: %f"),Framerate)
+
+	if(bColorAllObjectsOnEveryTick)
+	{
+		// Coloring all objects again to color new objects added after BeginPlay()
+		ColorAllObjects();
+	}
 
 	UpdateComponentTransforms();
 
@@ -493,7 +502,8 @@ void ARGBDCamera::GenerateColors(const uint32_t NumberOfColors)
 	const float StepVal = (1.0f - MinVal) / std::max(1.0f, ValCount - 1.0f);
 
 	ObjectColors.Reserve(SatCount * ValCount * HueCount);
-	OUT_INFO(TEXT("Generating %d colors."), SatCount * ValCount * HueCount);
+	if(bColoringObjectsIsVerbose)
+		OUT_INFO(TEXT("Generating %d colors."), SatCount * ValCount * HueCount);
 
 	FLinearColor HSVColor;
 	for(uint32_t s = 0; s < SatCount; ++s)
@@ -506,7 +516,9 @@ void ARGBDCamera::GenerateColors(const uint32_t NumberOfColors)
 			{
 				HSVColor.R = ((h * ShiftHue) % MaxHue) * StepHue;
 				ObjectColors.Add(HSVColor.HSVToLinearRGB().ToFColor(false));
-				OUT_INFO(TEXT("Added color %d: %d %d %d"), ObjectColors.Num(), ObjectColors.Last().B, ObjectColors.Last().G, ObjectColors.Last().R);
+
+				if(bColoringObjectsIsVerbose)
+					OUT_INFO(TEXT("Added color %d: %d %d %d"), ObjectColors.Num(), ObjectColors.Last().B, ObjectColors.Last().G, ObjectColors.Last().R);
 			}
 		}
 	}
@@ -517,9 +529,8 @@ void ARGBDCamera::GenerateColors(const uint32_t NumberOfColors)
  */
 bool ARGBDCamera::ColorObject(AActor *Actor, const FString &name)
 {
-	
-        FColor &SegmentationColor = ObjectColors[ObjectToColor[name]];
-        SegmentationColor.A=(uint8_t)255;
+	FColor &SegmentationColor = ObjectColors[ObjectToColor[name]];
+	SegmentationColor.A=(uint8_t)255;
 	if (!IsValid(Actor))
 	{
 		return false;
@@ -555,10 +566,12 @@ bool ARGBDCamera::ColorAllObjects()
 	{
 		++NumberOfActors;
 		FString ActorName = ActItr->GetName();
-		OUT_INFO(TEXT("Actor with name: %s."), *ActorName);
+		if(bColoringObjectsIsVerbose)
+			OUT_INFO(TEXT("Actor with name: %s."), *ActorName);
 	}
   
-	OUT_INFO(TEXT("Found %d Actors."), NumberOfActors);
+	if(bColoringObjectsIsVerbose)
+		OUT_INFO(TEXT("Found %d Actors."), NumberOfActors);
 	GenerateColors(NumberOfActors * 2);
 
 	for(TActorIterator<AActor> ActItr(GetWorld()); ActItr; ++ActItr)
@@ -568,12 +581,14 @@ bool ARGBDCamera::ColorAllObjects()
 		{
 			check(ColorsUsed < (uint32)ObjectColors.Num());
 			ObjectToColor.Add(ActorName, ColorsUsed);
-			OUT_INFO(TEXT("Adding color %d for object %s."), ColorsUsed, *ActorName);
+			if(bColoringObjectsIsVerbose)
+				OUT_INFO(TEXT("Adding color %d for object %s."), ColorsUsed, *ActorName);
 
 			++ColorsUsed;
 		}
 
-		OUT_INFO(TEXT("Coloring object %s."), *ActorName);
+		if(bColoringObjectsIsVerbose)
+			OUT_INFO(TEXT("Coloring object %s."), *ActorName);
 		ColorObject(*ActItr, ActorName);
 	}
 	return true;

@@ -81,6 +81,20 @@ public:
 	UPROPERTY(EditAnywhere, Category = "RGB-D Settings")
 	bool bCaptureObjectMaskImage;
 
+	// Call ColorAllObjects on every tick()
+	// Usually, every actor in the World get assigned a unique color
+	// for the object mask on BeginPlay().
+	// Activating this flag will assign colors to all actors 
+	// on every tick. This might be necessary if you dynamically add and remove
+	// objects to the scene after BeginPlay()
+	UPROPERTY(EditAnywhere, Category = "RGB-D Settings")
+	bool bColorAllObjectsOnEveryTick;
+
+	// Activate verbose output on the coloring-related methods 
+	// to know which objects have been found and their assigned RGB colors
+	UPROPERTY(EditAnywhere, Category = "RGB-D Settings")
+	bool bColoringObjectsIsVerbose;
+
 private:
 	// Camera capture component for color images (RGB)
 	USceneCaptureComponent2D* ColorImgCaptureComp;
