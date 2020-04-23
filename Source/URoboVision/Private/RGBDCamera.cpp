@@ -591,7 +591,7 @@ bool ARGBDCamera::ColorAllObjects()
 	{
 		OUT_INFO(TEXT("Found %d Actors."), NumberOfActors);
 		OUT_INFO(TEXT("The current object-to-color mapping contains %d entries."), ObjectToColor.Num());
-  }
+	}
 
 	if(!bColorAllObjectsOnEveryTick)
 		GenerateColors(NumberOfActors * 2);
