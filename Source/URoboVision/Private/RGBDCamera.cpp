@@ -86,6 +86,7 @@ ARGBDCamera::ARGBDCamera() /*: ACameraActor(), Width(960), Height(540), Framerat
 
 	bColorAllObjectsOnEveryTick = false;
 	bColoringObjectsIsVerbose = false;
+	ColorGenerationMaximumAmount = 0;
 
 	// Setting flags for each camera
 	ShowFlagsLit(ColorImgCaptureComp->ShowFlags);
@@ -136,6 +137,20 @@ void ARGBDCamera::BeginPlay()
 	Priv->Server.Start(ServerPort, bBindToAnyIP);
 
 	// Coloring all objects
+	// If colors will be reassigned on every tick, we have to
+	// reserve the right amount of colors now.
+	if(bColorAllObjectsOnEveryTick)
+	{
+		if(ColorGenerationMaximumAmount == 0){
+			OUT_WARN(TEXT("You've set bColorAllObjectsOnEveryTick to true, but didn't set a ColorGenerationMaximumAmount! Will set a default of 10000 now."));
+			GenerateColors(10000);
+		}
+		else
+		{
+			GenerateColors(ColorGenerationMaximumAmount);
+		}
+	}
+
 	ColorAllObjects();
 
 	Running = true;
@@ -234,6 +249,8 @@ void ARGBDCamera::Tick(float DeltaTime)
 
 	if(bColorAllObjectsOnEveryTick)
 	{
+		// Remove all old object color mapping information
+		RemoveNonExistingActorsFromColorMap();
 		// Coloring all objects again to color new objects added after BeginPlay()
 		ColorAllObjects();
 	}
@@ -571,8 +588,13 @@ bool ARGBDCamera::ColorAllObjects()
 	}
   
 	if(bColoringObjectsIsVerbose)
+	{
 		OUT_INFO(TEXT("Found %d Actors."), NumberOfActors);
-	GenerateColors(NumberOfActors * 2);
+		OUT_INFO(TEXT("The current object-to-color mapping contains %d entries."), ObjectToColor.Num());
+	}
+
+	if(!bColorAllObjectsOnEveryTick)
+		GenerateColors(NumberOfActors * 2);
 
 	for(TActorIterator<AActor> ActItr(GetWorld()); ActItr; ++ActItr)
 	{
@@ -580,18 +602,61 @@ bool ARGBDCamera::ColorAllObjects()
 		if(!ObjectToColor.Contains(ActorName))
 		{
 			check(ColorsUsed < (uint32)ObjectColors.Num());
-			ObjectToColor.Add(ActorName, ColorsUsed);
-			if(bColoringObjectsIsVerbose)
-				OUT_INFO(TEXT("Adding color %d for object %s."), ColorsUsed, *ActorName);
 
-			++ColorsUsed;
+			uint32 ColorToAssign;
+
+			bool UsedAFreedColor = false;
+			if(FreedColors.Num() > 0)
+			{
+				ColorToAssign = FreedColors.Pop();
+				UsedAFreedColor = true;
+			}else{
+				ColorToAssign = ColorsUsed;
+			}
+
+			ObjectToColor.Add(ActorName, ColorToAssign);
+			if(bColoringObjectsIsVerbose)
+				OUT_INFO(TEXT("Adding color %d for object %s."), ColorToAssign, *ActorName);
+
+			// If we didn't used one of the free colors,
+			// we have to increment our global color counter
+			if(!UsedAFreedColor)
+				++ColorsUsed;
 		}
 
 		if(bColoringObjectsIsVerbose)
 			OUT_INFO(TEXT("Coloring object %s."), *ActorName);
+
 		ColorObject(*ActItr, ActorName);
 	}
 	return true;
+}
+
+void ARGBDCamera::RemoveNonExistingActorsFromColorMap()
+{
+  TArray<FString> AllActors;
+
+	for(TActorIterator<AActor> ActItr(GetWorld()); ActItr; ++ActItr)
+	{
+		FString ActorName = ActItr->GetName();
+		AllActors.Add(ActorName);
+	}
+
+	TArray<FString> ObjectColorKeyToBeRemovedArray;
+	for(auto& ObjectColorPair : ObjectToColor)
+	{
+		if(!AllActors.Contains(ObjectColorPair.Key))
+		{
+			ObjectColorKeyToBeRemovedArray.Add(ObjectColorPair.Key);
+
+			// Store the colors that are now available for new objects
+			FreedColors.Add(ObjectColorPair.Value);
+		}
+	}
+	for(auto& ObjectColorKeyToBeRemoved : ObjectColorKeyToBeRemovedArray)
+	{
+		ObjectToColor.Remove(ObjectColorKeyToBeRemoved);
+	}
 }
 
 void ARGBDCamera::ProcessColor()

@@ -87,6 +87,11 @@ public:
 	// Activating this flag will assign colors to all actors 
 	// on every tick. This might be necessary if you dynamically add and remove
 	// objects to the scene after BeginPlay()
+  // Please note that when activating this flag, 
+  // the Color Initialization is done only once in BeginPlay()
+  // in conjunction with the ColorGenerationMaximumAmount variable
+  // to generate enough colors for your use case of the whole duration of 
+  // the runtime
 	UPROPERTY(EditAnywhere, Category = "RGB-D Settings")
 	bool bColorAllObjectsOnEveryTick;
 
@@ -94,6 +99,12 @@ public:
 	// to know which objects have been found and their assigned RGB colors
 	UPROPERTY(EditAnywhere, Category = "RGB-D Settings")
 	bool bColoringObjectsIsVerbose;
+
+	// The number of object colors that should be generated 
+  // when using ColorAllObjectsOnEveryTick.
+  // This number must be higher than the amount of Actors you have in your world at any time.
+	UPROPERTY(EditAnywhere, Category = "RGB-D Settings")
+	int ColorGenerationMaximumAmount;
 
 private:
 	// Camera capture component for color images (RGB)
@@ -123,6 +134,7 @@ private:
 	TArray<FColor>ImageColor, ObjectColors;
 	TMap<FString, uint32> ObjectToColor;
 	uint32 ColorsUsed;
+	TArray<uint32> FreedColors;
 	bool Running, Paused;
 
 	void ShowFlagsBasicSetting(FEngineShowFlags &ShowFlags) const;
@@ -138,6 +150,7 @@ private:
 	void GenerateColors(const uint32_t NumberOfColors);
 	bool ColorObject(AActor *Actor, const FString &name);
 	bool ColorAllObjects();
+	void RemoveNonExistingActorsFromColorMap();
 	void ProcessColor();
 	void ProcessDepth();
 	void ProcessObject();
