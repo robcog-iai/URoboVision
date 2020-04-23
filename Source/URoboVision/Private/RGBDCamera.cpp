@@ -588,7 +588,7 @@ bool ARGBDCamera::ColorAllObjects()
 	}
   
 	if(bColoringObjectsIsVerbose)
-  {
+	{
 		OUT_INFO(TEXT("Found %d Actors."), NumberOfActors);
 		OUT_INFO(TEXT("The current object-to-color mapping contains %d entries."), ObjectToColor.Num());
   }
