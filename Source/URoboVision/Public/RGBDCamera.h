@@ -154,4 +154,5 @@ private:
 	void ProcessColor();
 	void ProcessDepth();
 	void ProcessObject();
+	void SetVisibility(FEngineShowFlags& Target, FEngineShowFlags& Source) const;
 };
