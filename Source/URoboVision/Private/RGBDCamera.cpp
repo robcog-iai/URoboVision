@@ -368,6 +368,18 @@ void ARGBDCamera::ShowFlagsBasicSetting(FEngineShowFlags &ShowFlags) const
 	ShowFlags.SetSkeletalMeshes(true);
 }
 
+void ARGBDCamera::SetVisibility(FEngineShowFlags& Target, FEngineShowFlags& Source) const
+{
+	Target.SetStaticMeshes(Source.StaticMeshes);
+	Target.SetLandscape(Source.Landscape);
+
+	Target.SetInstancedFoliage(Source.InstancedFoliage);
+	Target.SetInstancedGrass(Source.InstancedGrass);
+	Target.SetInstancedStaticMeshes(Source.InstancedStaticMeshes);
+
+	Target.SetSkeletalMeshes(Source.SkeletalMeshes);
+}
+
 void ARGBDCamera::ShowFlagsLit(FEngineShowFlags &ShowFlags) const
 {
 	ShowFlagsBasicSetting(ShowFlags);
@@ -384,6 +396,36 @@ void ARGBDCamera::ShowFlagsLit(FEngineShowFlags &ShowFlags) const
 	ShowFlags.SetAntiAliasing(true);
 	ShowFlags.SetEyeAdaptation(false); // Eye adaption is a slow temporal procedure, not useful for image capture
 }
+
+// void ARGBDCamera::ShowFlagsLit(FEngineShowFlags &ShowFlags) const
+// {
+// 	//FEngineShowFlags PreviousShowFlags(ShowFlags);
+// 	//ShowFlagsBasicSetting(ShowFlags);
+// 	/*ShowFlags = FEngineShowFlags(EShowFlagInitMode::ESFIM_Game);*/
+// 	// ApplyViewMode(EViewModeIndex::VMI_VisualizeBuffer, true, ShowFlags);
+// 	ApplyViewMode(VMI_Lit, true, ShowFlags);
+// 	//ShowFlags.SetMaterials(true);
+//
+// 	ShowFlags.SetPostProcessing(true);
+// 	ShowFlags.SetMaterials(true);
+// 	ShowFlags.SetVisualizeBuffer(true);
+//
+// 	// ToneMapper needs to be disabled
+// 	ShowFlags.SetTonemapper(false);
+// 	// TemporalAA needs to be disabled, or it will contaminate the following frame
+// 	ShowFlags.SetTemporalAA(false);
+//
+// 	//ShowFlags.SetLighting(true);
+// 	//ShowFlags.SetPostProcessing(true);
+// 	// ToneMapper needs to be enabled, otherwise the screen will be very dark
+// 	/*ShowFlags.SetTonemapper(true);
+// 	// TemporalAA needs to be disabled, otherwise the previous frame might contaminate current frame.
+// 	// Check: https://answers.unrealengine.com/questions/436060/low-quality-screenshot-after-setting-the-actor-pos.html for detail
+// 	ShowFlags.SetTemporalAA(false);
+// 	ShowFlags.SetAntiAliasing(true);
+// 	ShowFlags.SetEyeAdaptation(false); // Eye adaption is a slow temporal procedure, not useful for image capture*/
+// 	//SetVisibility(ShowFlags, PreviousShowFlags);
+// }
 
 void ARGBDCamera::ShowFlagsPostProcess(FEngineShowFlags &ShowFlags) const
 {
@@ -410,6 +452,24 @@ void ARGBDCamera::ShowFlagsVertexColor(FEngineShowFlags &ShowFlags) const
 
 	GVertexColorViewMode = EVertexColorViewMode::Color;
 }
+
+// void ARGBDCamera::ShowFlagsVertexColor(FEngineShowFlags &ShowFlags) const
+// {
+// 	FEngineShowFlags PreviousShowFlags(ShowFlags); // Store previous ShowFlags
+// 	ApplyViewMode(VMI_Lit, true, ShowFlags);
+//
+// 	// From MeshPaintEdMode.cpp:2942
+// 	ShowFlags.SetMaterials(false);
+// 	ShowFlags.SetLighting(false);
+// 	ShowFlags.SetBSPTriangles(true);
+// 	ShowFlags.SetVertexColors(true);
+// 	ShowFlags.SetPostProcessing(false);
+// 	ShowFlags.SetHMDDistortion(false);
+// 	ShowFlags.SetTonemapper(false); // This won't take effect here
+//
+// 	// GVertexColorViewMode = EVertexColorViewMode::Color;
+// 	SetVisibility(ShowFlags, PreviousShowFlags); // Store the visibility of the scene, such as folliage and landscape.
+// }
 
 void ARGBDCamera::ReadImage(UTextureRenderTarget2D *RenderTarget, TArray<FFloat16Color> &ImageData) const
 {
