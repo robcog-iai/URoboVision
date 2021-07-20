@@ -3,7 +3,11 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#if ENGINE_MINOR_VERSION > 23 || ENGINE_MAJOR_VERSION >4
 #include "Modules/ModuleManager.h"
+#else
+#include "ModuleManager.h"
+#endif
 
 class FURoboVisionModule : public IModuleInterface
 {
