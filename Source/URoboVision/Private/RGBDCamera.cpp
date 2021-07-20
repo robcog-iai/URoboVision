@@ -3,7 +3,13 @@
 #include "RGBDCamera.h"
 #include "Components/SceneCaptureComponent2D.h"
 #include "Camera/CameraComponent.h"
+
+#if ENGINE_MINOR_VERSION > 23 || ENGINE_MAJOR_VERSION >4
+#include "UObject/ConstructorHelpers.h"
+#else
 #include "ConstructorHelpers.h"
+#endif
+
 #include "EngineUtils.h"
 #include "StopTime.h"
 #include "Server.h"
