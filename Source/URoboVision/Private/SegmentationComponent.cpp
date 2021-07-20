@@ -7,7 +7,7 @@
 #include <sstream>
 #include "Components/SceneCaptureComponent2D.h"
 #include "Camera/CameraComponent.h"
-#include "ConstructorHelpers.h"
+#include "UObject/ConstructorHelpers.h"
 #include "EngineUtils.h"
 #include "StopTime.h"
 #include "Server.h"
