@@ -76,8 +76,8 @@ FPrimitiveSceneProxy* USegmentationComponent::CreateSceneProxy(UStaticMeshCompon
 	UMaterialInterface* ProxyMaterial = SegmentationMID;
 	UStaticMesh* ParentStaticMesh = StaticMeshComponent->GetStaticMesh();
 	if(ParentStaticMesh == NULL
-		|| ParentStaticMesh->RenderData == NULL
-		|| ParentStaticMesh->RenderData->LODResources.Num() == 0)
+		|| ParentStaticMesh->GetRenderData() == NULL
+		|| ParentStaticMesh->GetRenderData()->LODResources.Num() == 0)
 	{
 		OUT_INFO(TEXT("ParentStaticMesh is invalid."));
 		return NULL;
@@ -93,7 +93,7 @@ FPrimitiveSceneProxy* USegmentationComponent::CreateSceneProxy(USkeletalMeshComp
 	ERHIFeatureLevel::Type SceneFeatureLevel = GetWorld()->FeatureLevel;
 	FSkeletalMeshRenderData* SkelMeshRenderData = SkeletalMeshComponent->GetSkeletalMeshRenderData();
 	if (SkelMeshRenderData &&
-		SkelMeshRenderData->LODRenderData.IsValidIndex(SkeletalMeshComponent->PredictedLODLevel) &&
+		SkelMeshRenderData->LODRenderData.IsValidIndex(SkeletalMeshComponent->GetPredictedLODLevel()) &&
 		SkeletalMeshComponent->MeshObject) 
 	{
 		return new FSkeletalSegmentationSceneProxy(SkeletalMeshComponent, SkelMeshRenderData, ProxyMaterial);

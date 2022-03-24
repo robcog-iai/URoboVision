@@ -1,6 +1,8 @@
 URoboVision
 =====
 
+### UE Version: **4.27**
+
 Plugin with a CameraActor that captures RGB-D data and sends it out over TCP.
 
 Usage

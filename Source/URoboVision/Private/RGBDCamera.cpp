@@ -403,10 +403,10 @@ void ARGBDCamera::ReadImage(UTextureRenderTarget2D *RenderTarget, TArray<FFloat1
 
 void ARGBDCamera::ReadColorImage(UTextureRenderTarget2D *RenderTarget, TArray<FColor> &ImageData) const
 {
-
-	int32 Width = RenderTarget->SizeX, Height = RenderTarget->SizeY;
+	int32 RWidth = RenderTarget->SizeX;
+	int32 RHeight = RenderTarget->SizeY;
 	FTextureRenderTargetResource* RenderTargetResource;
-	ImageData.AddZeroed(Width * Height);
+	ImageData.AddZeroed(RWidth * RHeight);
 	RenderTargetResource = RenderTarget->GameThread_GetRenderTargetResource();
 	FReadSurfaceDataFlags ReadSurfaceDataFlags;
 	ReadSurfaceDataFlags.SetLinearToGamma(false); // This is super important to disable this!
@@ -534,13 +534,17 @@ bool ARGBDCamera::ColorObject(AActor *Actor, const FString &name)
 	{
 		return false;
 	}
-	TArray<UActorComponent*> SegmentationComponents = Actor->GetComponentsByClass(USegmentationComponent::StaticClass());
+	//TArray<UActorComponent*> SegmentationComponents = Actor->GetComponentsByClass(USegmentationComponent::StaticClass());
+	TArray<UActorComponent*> SegmentationComponents;
+	Actor->GetComponents(USegmentationComponent::StaticClass(), SegmentationComponents);
 	if (SegmentationComponents.Num() != 0)
 	{
 		return false;
 	}
 
-	TArray<UActorComponent*> MeshComponents = Actor->GetComponentsByClass(UMeshComponent::StaticClass());
+	//TArray<UActorComponent*> MeshComponents = Actor->GetComponentsByClass(UMeshComponent::StaticClass());
+	TArray<UActorComponent*> MeshComponents;
+	Actor->GetComponents(UMeshComponent::StaticClass(), MeshComponents);
 	for (UActorComponent* Component : MeshComponents)
 	{
 		UMeshComponent* MeshComponent = Cast<UMeshComponent>(Component);
