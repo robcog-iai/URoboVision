@@ -55,22 +55,16 @@ ARGBDCamera::ARGBDCamera() /*: ACameraActor(), Width(960), Height(540), Framerat
 	ColorImgCaptureComp->SetupAttachment(RootComponent);
 	ColorImgCaptureComp->CaptureSource = ESceneCaptureSource::SCS_FinalColorLDR;
 	ColorImgCaptureComp->TextureTarget = CreateDefaultSubobject<UTextureRenderTarget2D>(TEXT("ColorTarget"));
-	ColorImgCaptureComp->TextureTarget->InitAutoFormat(Width, Height);
-	ColorImgCaptureComp->FOVAngle = FieldOfView;
-	
+
 	DepthImgCaptureComp = CreateDefaultSubobject<USceneCaptureComponent2D>(TEXT("DepthCapture"));
 	DepthImgCaptureComp->SetupAttachment(RootComponent);
 	DepthImgCaptureComp->CaptureSource = ESceneCaptureSource::SCS_FinalColorLDR;
 	DepthImgCaptureComp->TextureTarget = CreateDefaultSubobject<UTextureRenderTarget2D>(TEXT("DepthTarget"));
-	DepthImgCaptureComp->TextureTarget->InitAutoFormat(Width, Height);
-	DepthImgCaptureComp->FOVAngle = FieldOfView;
 
 	ObjectMaskImgCaptureComp = CreateDefaultSubobject<USceneCaptureComponent2D>(TEXT("ObjectCapture"));
 	ObjectMaskImgCaptureComp->SetupAttachment(RootComponent);
 	ObjectMaskImgCaptureComp->CaptureSource = ESceneCaptureSource::SCS_FinalColorLDR;
 	ObjectMaskImgCaptureComp->TextureTarget = CreateDefaultSubobject<UTextureRenderTarget2D>(TEXT("ObjectTarget"));
-	ObjectMaskImgCaptureComp->TextureTarget->InitAutoFormat(Width, Height);
-	ObjectMaskImgCaptureComp->FOVAngle = FieldOfView;
 
 	// Disable the capture components by default (enable if needed in begin play)
 	ColorImgCaptureComp->SetHiddenInGame(true);
@@ -89,6 +83,10 @@ ARGBDCamera::ARGBDCamera() /*: ACameraActor(), Width(960), Height(540), Framerat
 	// TCP IP communication server port
 	ServerPort = 10000;
 	bBindToAnyIP = true;
+
+	bColorAllObjectsOnEveryTick = false;
+	bColoringObjectsIsVerbose = false;
+	ColorGenerationMaximumAmount = 0;
 
 	// Setting flags for each camera
 	ShowFlagsLit(ColorImgCaptureComp->ShowFlags);
@@ -111,15 +109,6 @@ ARGBDCamera::ARGBDCamera() /*: ACameraActor(), Width(960), Height(540), Framerat
 		OUT_ERROR(TEXT("Could not load material for depth."));
 	}
 
-	// Initializing buffers for reading images from the GPU
-	ImageColor.AddUninitialized(Width * Height);
-	ImageDepth.AddUninitialized(Width * Height);
-	ImageObject.AddUninitialized(Width * Height);
-
-	// Creating double buffer and setting the pointer of the server object
-	Priv = new PrivateData();
-	Priv->Buffer = TSharedPtr<PacketBuffer>(new PacketBuffer(Width, Height, FieldOfView));
-	Priv->Server.Buffer = Priv->Buffer;
 }
 
 ARGBDCamera::~ARGBDCamera()
@@ -134,10 +123,34 @@ void ARGBDCamera::BeginPlay()
 	Super::BeginPlay();
 	OUT_INFO(TEXT("Begin play!"));
 
+	// Initializing buffers for reading images from the GPU
+	ImageColor.AddUninitialized(Width * Height);
+	ImageDepth.AddUninitialized(Width * Height);
+	ImageObject.AddUninitialized(Width * Height);
+
+	// Creating double buffer and setting the pointer of the server object
+	Priv = new PrivateData();
+	Priv->Buffer = TSharedPtr<PacketBuffer>(new PacketBuffer(Width, Height, FieldOfView));
+	Priv->Server.Buffer = Priv->Buffer;
+
 	// Starting server
 	Priv->Server.Start(ServerPort, bBindToAnyIP);
 
 	// Coloring all objects
+	// If colors will be reassigned on every tick, we have to
+	// reserve the right amount of colors now.
+	if(bColorAllObjectsOnEveryTick)
+	{
+		if(ColorGenerationMaximumAmount == 0){
+			OUT_WARN(TEXT("You've set bColorAllObjectsOnEveryTick to true, but didn't set a ColorGenerationMaximumAmount! Will set a default of 10000 now."));
+			GenerateColors(10000);
+		}
+		else
+		{
+			GenerateColors(ColorGenerationMaximumAmount);
+		}
+	}
+
 	ColorAllObjects();
 
 	Running = true;
@@ -150,26 +163,21 @@ void ARGBDCamera::BeginPlay()
 	Priv->DoneColor = false;
 	Priv->DoneObject = false;
 
-        //Settings the right camera parameters from UE4 editor
-        
-        //Aspect Ratio
-        GetCameraComponent()->FieldOfView = this->FieldOfView;
-        GetCameraComponent()->AspectRatio = this->Width / (float)this->Height;
+	//Settings the right camera parameters from UE4 editor
 
-        //Field of view
-        ColorImgCaptureComp->FOVAngle =this->FieldOfView;
-        DepthImgCaptureComp->FOVAngle = this->FieldOfView;
-        ObjectMaskImgCaptureComp->FOVAngle = this->FieldOfView;
-        
-        //Width
-        ColorImgCaptureComp->TextureTarget->SizeX=this->Width;
-        DepthImgCaptureComp->TextureTarget->SizeX=this->Width;
-        ObjectMaskImgCaptureComp->TextureTarget->SizeX=this->Width;
-        //Height
-        ColorImgCaptureComp->TextureTarget->SizeY=this->Height;
-        DepthImgCaptureComp->TextureTarget->SizeY=this->Height;
-        ObjectMaskImgCaptureComp->TextureTarget->SizeY=this->Height;
-        
+	//Aspect Ratio
+	GetCameraComponent()->FieldOfView = this->FieldOfView;
+	GetCameraComponent()->AspectRatio = this->Width / (float)this->Height;
+
+	//Field of view
+	ColorImgCaptureComp->FOVAngle =this->FieldOfView;
+	DepthImgCaptureComp->FOVAngle = this->FieldOfView;
+	ObjectMaskImgCaptureComp->FOVAngle = this->FieldOfView;
+
+	ColorImgCaptureComp->TextureTarget->InitAutoFormat(Width, Height);
+	DepthImgCaptureComp->TextureTarget->InitAutoFormat(Width, Height);
+	ObjectMaskImgCaptureComp->TextureTarget->InitAutoFormat(Width, Height);
+
 	// Starting threads to process image data
 	if (bCaptureColorImage)
 	{
@@ -238,6 +246,14 @@ void ARGBDCamera::Tick(float DeltaTime)
 	TimePassed -= 1.0f / Framerate;
 	//MEASURE_TIME("Tick");
 	//OUT_INFO(TEXT("FRAME_RATE: %f"),Framerate)
+
+	if(bColorAllObjectsOnEveryTick)
+	{
+		// Remove all old object color mapping information
+		RemoveNonExistingActorsFromColorMap();
+		// Coloring all objects again to color new objects added after BeginPlay()
+		ColorAllObjects();
+	}
 
 	UpdateComponentTransforms();
 
@@ -352,6 +368,18 @@ void ARGBDCamera::ShowFlagsBasicSetting(FEngineShowFlags &ShowFlags) const
 	ShowFlags.SetSkeletalMeshes(true);
 }
 
+void ARGBDCamera::SetVisibility(FEngineShowFlags& Target, FEngineShowFlags& Source) const
+{
+	Target.SetStaticMeshes(Source.StaticMeshes);
+	Target.SetLandscape(Source.Landscape);
+
+	Target.SetInstancedFoliage(Source.InstancedFoliage);
+	Target.SetInstancedGrass(Source.InstancedGrass);
+	Target.SetInstancedStaticMeshes(Source.InstancedStaticMeshes);
+
+	Target.SetSkeletalMeshes(Source.SkeletalMeshes);
+}
+
 void ARGBDCamera::ShowFlagsLit(FEngineShowFlags &ShowFlags) const
 {
 	ShowFlagsBasicSetting(ShowFlags);
@@ -368,6 +396,36 @@ void ARGBDCamera::ShowFlagsLit(FEngineShowFlags &ShowFlags) const
 	ShowFlags.SetAntiAliasing(true);
 	ShowFlags.SetEyeAdaptation(false); // Eye adaption is a slow temporal procedure, not useful for image capture
 }
+
+// void ARGBDCamera::ShowFlagsLit(FEngineShowFlags &ShowFlags) const
+// {
+// 	//FEngineShowFlags PreviousShowFlags(ShowFlags);
+// 	//ShowFlagsBasicSetting(ShowFlags);
+// 	/*ShowFlags = FEngineShowFlags(EShowFlagInitMode::ESFIM_Game);*/
+// 	// ApplyViewMode(EViewModeIndex::VMI_VisualizeBuffer, true, ShowFlags);
+// 	ApplyViewMode(VMI_Lit, true, ShowFlags);
+// 	//ShowFlags.SetMaterials(true);
+//
+// 	ShowFlags.SetPostProcessing(true);
+// 	ShowFlags.SetMaterials(true);
+// 	ShowFlags.SetVisualizeBuffer(true);
+//
+// 	// ToneMapper needs to be disabled
+// 	ShowFlags.SetTonemapper(false);
+// 	// TemporalAA needs to be disabled, or it will contaminate the following frame
+// 	ShowFlags.SetTemporalAA(false);
+//
+// 	//ShowFlags.SetLighting(true);
+// 	//ShowFlags.SetPostProcessing(true);
+// 	// ToneMapper needs to be enabled, otherwise the screen will be very dark
+// 	/*ShowFlags.SetTonemapper(true);
+// 	// TemporalAA needs to be disabled, otherwise the previous frame might contaminate current frame.
+// 	// Check: https://answers.unrealengine.com/questions/436060/low-quality-screenshot-after-setting-the-actor-pos.html for detail
+// 	ShowFlags.SetTemporalAA(false);
+// 	ShowFlags.SetAntiAliasing(true);
+// 	ShowFlags.SetEyeAdaptation(false); // Eye adaption is a slow temporal procedure, not useful for image capture*/
+// 	//SetVisibility(ShowFlags, PreviousShowFlags);
+// }
 
 void ARGBDCamera::ShowFlagsPostProcess(FEngineShowFlags &ShowFlags) const
 {
@@ -395,6 +453,24 @@ void ARGBDCamera::ShowFlagsVertexColor(FEngineShowFlags &ShowFlags) const
 	GVertexColorViewMode = EVertexColorViewMode::Color;
 }
 
+// void ARGBDCamera::ShowFlagsVertexColor(FEngineShowFlags &ShowFlags) const
+// {
+// 	FEngineShowFlags PreviousShowFlags(ShowFlags); // Store previous ShowFlags
+// 	ApplyViewMode(VMI_Lit, true, ShowFlags);
+//
+// 	// From MeshPaintEdMode.cpp:2942
+// 	ShowFlags.SetMaterials(false);
+// 	ShowFlags.SetLighting(false);
+// 	ShowFlags.SetBSPTriangles(true);
+// 	ShowFlags.SetVertexColors(true);
+// 	ShowFlags.SetPostProcessing(false);
+// 	ShowFlags.SetHMDDistortion(false);
+// 	ShowFlags.SetTonemapper(false); // This won't take effect here
+//
+// 	// GVertexColorViewMode = EVertexColorViewMode::Color;
+// 	SetVisibility(ShowFlags, PreviousShowFlags); // Store the visibility of the scene, such as folliage and landscape.
+// }
+
 void ARGBDCamera::ReadImage(UTextureRenderTarget2D *RenderTarget, TArray<FFloat16Color> &ImageData) const
 {
 	FTextureRenderTargetResource *RenderTargetResource = RenderTarget->GameThread_GetRenderTargetResource();
@@ -403,10 +479,9 @@ void ARGBDCamera::ReadImage(UTextureRenderTarget2D *RenderTarget, TArray<FFloat1
 
 void ARGBDCamera::ReadColorImage(UTextureRenderTarget2D *RenderTarget, TArray<FColor> &ImageData) const
 {
-	int32 RWidth = RenderTarget->SizeX;
-	int32 RHeight = RenderTarget->SizeY;
+	int32 RT_Width = RenderTarget->SizeX, RT_Height = RenderTarget->SizeY;
 	FTextureRenderTargetResource* RenderTargetResource;
-	ImageData.AddZeroed(RWidth * RHeight);
+	ImageData.AddZeroed(RT_Width * RT_Height);
 	RenderTargetResource = RenderTarget->GameThread_GetRenderTargetResource();
 	FReadSurfaceDataFlags ReadSurfaceDataFlags;
 	ReadSurfaceDataFlags.SetLinearToGamma(false); // This is super important to disable this!
@@ -503,7 +578,8 @@ void ARGBDCamera::GenerateColors(const uint32_t NumberOfColors)
 	const float StepVal = (1.0f - MinVal) / std::max(1.0f, ValCount - 1.0f);
 
 	ObjectColors.Reserve(SatCount * ValCount * HueCount);
-	OUT_INFO(TEXT("Generating %d colors."), SatCount * ValCount * HueCount);
+	if(bColoringObjectsIsVerbose)
+		OUT_INFO(TEXT("Generating %d colors."), SatCount * ValCount * HueCount);
 
 	FLinearColor HSVColor;
 	for(uint32_t s = 0; s < SatCount; ++s)
@@ -516,7 +592,9 @@ void ARGBDCamera::GenerateColors(const uint32_t NumberOfColors)
 			{
 				HSVColor.R = ((h * ShiftHue) % MaxHue) * StepHue;
 				ObjectColors.Add(HSVColor.HSVToLinearRGB().ToFColor(false));
-				OUT_INFO(TEXT("Added color %d: %d %d %d"), ObjectColors.Num(), ObjectColors.Last().B, ObjectColors.Last().G, ObjectColors.Last().R);
+
+				if(bColoringObjectsIsVerbose)
+					OUT_INFO(TEXT("Added color %d: %d %d %d"), ObjectColors.Num(), ObjectColors.Last().B, ObjectColors.Last().G, ObjectColors.Last().R);
 			}
 		}
 	}
@@ -527,9 +605,8 @@ void ARGBDCamera::GenerateColors(const uint32_t NumberOfColors)
  */
 bool ARGBDCamera::ColorObject(AActor *Actor, const FString &name)
 {
-	
-        FColor &SegmentationColor = ObjectColors[ObjectToColor[name]];
-        SegmentationColor.A=(uint8_t)255;
+	FColor &SegmentationColor = ObjectColors[ObjectToColor[name]];
+	SegmentationColor.A=(uint8_t)255;
 	if (!IsValid(Actor))
 	{
 		return false;
@@ -569,11 +646,18 @@ bool ARGBDCamera::ColorAllObjects()
 	{
 		++NumberOfActors;
 		FString ActorName = ActItr->GetName();
-		OUT_INFO(TEXT("Actor with name: %s."), *ActorName);
+		if(bColoringObjectsIsVerbose)
+			OUT_INFO(TEXT("Actor with name: %s."), *ActorName);
 	}
   
-	OUT_INFO(TEXT("Found %d Actors."), NumberOfActors);
-	GenerateColors(NumberOfActors * 2);
+	if(bColoringObjectsIsVerbose)
+	{
+		OUT_INFO(TEXT("Found %d Actors."), NumberOfActors);
+		OUT_INFO(TEXT("The current object-to-color mapping contains %d entries."), ObjectToColor.Num());
+	}
+
+	if(!bColorAllObjectsOnEveryTick)
+		GenerateColors(NumberOfActors * 2);
 
 	for(TActorIterator<AActor> ActItr(GetWorld()); ActItr; ++ActItr)
 	{
@@ -581,16 +665,61 @@ bool ARGBDCamera::ColorAllObjects()
 		if(!ObjectToColor.Contains(ActorName))
 		{
 			check(ColorsUsed < (uint32)ObjectColors.Num());
-			ObjectToColor.Add(ActorName, ColorsUsed);
-			OUT_INFO(TEXT("Adding color %d for object %s."), ColorsUsed, *ActorName);
 
-			++ColorsUsed;
+			uint32 ColorToAssign;
+
+			bool UsedAFreedColor = false;
+			if(FreedColors.Num() > 0)
+			{
+				ColorToAssign = FreedColors.Pop();
+				UsedAFreedColor = true;
+			}else{
+				ColorToAssign = ColorsUsed;
+			}
+
+			ObjectToColor.Add(ActorName, ColorToAssign);
+			if(bColoringObjectsIsVerbose)
+				OUT_INFO(TEXT("Adding color %d for object %s."), ColorToAssign, *ActorName);
+
+			// If we didn't used one of the free colors,
+			// we have to increment our global color counter
+			if(!UsedAFreedColor)
+				++ColorsUsed;
 		}
 
-		OUT_INFO(TEXT("Coloring object %s."), *ActorName);
+		if(bColoringObjectsIsVerbose)
+			OUT_INFO(TEXT("Coloring object %s."), *ActorName);
+
 		ColorObject(*ActItr, ActorName);
 	}
 	return true;
+}
+
+void ARGBDCamera::RemoveNonExistingActorsFromColorMap()
+{
+  TArray<FString> AllActors;
+
+	for(TActorIterator<AActor> ActItr(GetWorld()); ActItr; ++ActItr)
+	{
+		FString ActorName = ActItr->GetName();
+		AllActors.Add(ActorName);
+	}
+
+	TArray<FString> ObjectColorKeyToBeRemovedArray;
+	for(auto& ObjectColorPair : ObjectToColor)
+	{
+		if(!AllActors.Contains(ObjectColorPair.Key))
+		{
+			ObjectColorKeyToBeRemovedArray.Add(ObjectColorPair.Key);
+
+			// Store the colors that are now available for new objects
+			FreedColors.Add(ObjectColorPair.Value);
+		}
+	}
+	for(auto& ObjectColorKeyToBeRemoved : ObjectColorKeyToBeRemovedArray)
+	{
+		ObjectToColor.Remove(ObjectColorKeyToBeRemoved);
+	}
 }
 
 void ARGBDCamera::ProcessColor()
