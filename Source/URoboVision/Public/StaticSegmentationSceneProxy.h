@@ -8,7 +8,7 @@
 #include "Runtime/Engine/Public/MaterialShared.h"
 #include "Runtime/Engine/Classes/Engine/Engine.h"
 #include "Runtime/Engine/Public/Rendering/SkeletalMeshRenderData.h"
-#include "ConstructorHelpers.h"
+#include "UObject/ConstructorHelpers.h"
 #include "EngineUtils.h"
 
 
