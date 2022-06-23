@@ -13,7 +13,6 @@
 #else
 #include "ConstructorHelpers.h"
 #endif
-
 #include "EngineUtils.h"
 #include "StopTime.h"
 #include "Server.h"
@@ -104,7 +103,7 @@ FPrimitiveSceneProxy* USegmentationComponent::CreateSceneProxy(USkeletalMeshComp
 	ERHIFeatureLevel::Type SceneFeatureLevel = GetWorld()->FeatureLevel;
 	FSkeletalMeshRenderData* SkelMeshRenderData = SkeletalMeshComponent->GetSkeletalMeshRenderData();
 	if (SkelMeshRenderData &&
-		SkelMeshRenderData->LODRenderData.IsValidIndex(SkeletalMeshComponent->PredictedLODLevel) &&
+		SkelMeshRenderData->LODRenderData.IsValidIndex(SkeletalMeshComponent->GetPredictedLODLevel()) &&
 		SkeletalMeshComponent->MeshObject) 
 	{
 		return new FSkeletalSegmentationSceneProxy(SkeletalMeshComponent, SkelMeshRenderData, ProxyMaterial);

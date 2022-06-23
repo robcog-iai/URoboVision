@@ -9,7 +9,6 @@
 #else
 #include "ConstructorHelpers.h"
 #endif
-
 #include "EngineUtils.h"
 #include "StopTime.h"
 #include "Server.h"
@@ -485,7 +484,6 @@ void ARGBDCamera::ReadImage(UTextureRenderTarget2D *RenderTarget, TArray<FFloat1
 
 void ARGBDCamera::ReadColorImage(UTextureRenderTarget2D *RenderTarget, TArray<FColor> &ImageData) const
 {
-
 	int32 RT_Width = RenderTarget->SizeX, RT_Height = RenderTarget->SizeY;
 	FTextureRenderTargetResource* RenderTargetResource;
 	ImageData.AddZeroed(RT_Width * RT_Height);
@@ -618,13 +616,17 @@ bool ARGBDCamera::ColorObject(AActor *Actor, const FString &name)
 	{
 		return false;
 	}
-	TArray<UActorComponent*> SegmentationComponents = Actor->GetComponentsByClass(USegmentationComponent::StaticClass());
+	//TArray<UActorComponent*> SegmentationComponents = Actor->GetComponentsByClass(USegmentationComponent::StaticClass());
+	TArray<UActorComponent*> SegmentationComponents;
+	Actor->GetComponents(USegmentationComponent::StaticClass(), SegmentationComponents);
 	if (SegmentationComponents.Num() != 0)
 	{
 		return false;
 	}
 
-	TArray<UActorComponent*> MeshComponents = Actor->GetComponentsByClass(UMeshComponent::StaticClass());
+	//TArray<UActorComponent*> MeshComponents = Actor->GetComponentsByClass(UMeshComponent::StaticClass());
+	TArray<UActorComponent*> MeshComponents;
+	Actor->GetComponents(UMeshComponent::StaticClass(), MeshComponents);
 	for (UActorComponent* Component : MeshComponents)
 	{
 		UMeshComponent* MeshComponent = Cast<UMeshComponent>(Component);
