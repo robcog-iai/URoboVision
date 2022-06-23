@@ -82,8 +82,13 @@ FPrimitiveSceneProxy* USegmentationComponent::CreateSceneProxy(UStaticMeshCompon
 	UMaterialInterface* ProxyMaterial = SegmentationMID;
 	UStaticMesh* ParentStaticMesh = StaticMeshComponent->GetStaticMesh();
 	if(ParentStaticMesh == NULL
+		#if ENGINE_MINOR_VERSION < 27 && ENGINE_MAJOR_VERSION < 5
 		|| ParentStaticMesh->RenderData == NULL
 		|| ParentStaticMesh->RenderData->LODResources.Num() == 0)
+		#else
+		|| ParentStaticMesh->GetRenderData() == NULL
+		|| ParentStaticMesh->GetRenderData()->LODResources.Num() == 0)
+		#endif //Version
 	{
 		OUT_INFO(TEXT("ParentStaticMesh is invalid."));
 		return NULL;
