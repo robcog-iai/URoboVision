@@ -30,7 +30,7 @@ public:
 		int32 BatchIndex,
 		int32 ElementIndex,
 		uint8 InDepthPriorityGroup,
-	#if (ENGINE_MINOR_VERSION >= 22)
+	#if (ENGINE_MINOR_VERSION >= 22 || ENGINE_MAJOR_VERSION == 5)
 		bool bUseSelectionOutline,
 	#else
 		bool bUseSelectedMaterial,

@@ -1,29 +1,18 @@
 // Copyright 2017, Institute for Artificial Intelligence - University of Bremen
 
 using UnrealBuildTool;
+using System.IO;
 
 public class URoboVision : ModuleRules
 {
 	public URoboVision(ReadOnlyTargetRules Target) : base(Target)
 	{
 		PCHUsage = ModuleRules.PCHUsageMode.UseExplicitOrSharedPCHs;
-		
-		PublicIncludePaths.AddRange(
-			new string[] {
-				"URoboVision/Public"
-				// ... add public include paths required here ...
-			}
-			);
-				
-		
-		PrivateIncludePaths.AddRange(
-			new string[] {
-				"URoboVision/Private",
-				// ... add other private include paths required here ...
-			}
-			);
-			
-		
+
+		PublicIncludePaths.Add(Path.Combine(ModuleDirectory, "Public"));
+		PrivateIncludePaths.Add(Path.Combine(ModuleDirectory, "Private"));
+
+
 		PublicDependencyModuleNames.AddRange(
 			new string[]
 			{
