@@ -16,7 +16,7 @@
 #endif
 
 #include "EngineUtils.h"
-
+#include "StaticMeshSceneProxy.h"
 
 
 class FStaticSegmentationSceneProxy : public FStaticMeshSceneProxy
