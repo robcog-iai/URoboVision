@@ -15,6 +15,7 @@
 #include "ConstructorHelpers.h"
 #endif
 #include "EngineUtils.h"
+#include "SkeletalMeshSceneProxy.h"
 
 class FSkeletalSegmentationSceneProxy : public FSkeletalMeshSceneProxy
 {
