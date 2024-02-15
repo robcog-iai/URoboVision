@@ -25,6 +25,10 @@
 #include <cmath>
 #include <condition_variable>
 
+#if ENGINE_MINOR_VERSION >= 2 && ENGINE_MAJOR_VERSION == 5
+#include "SkeletalMeshSceneProxy.h"
+#endif
+
 USegmentationComponent::USegmentationComponent(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)
 {
@@ -104,7 +108,7 @@ FPrimitiveSceneProxy* USegmentationComponent::CreateSceneProxy(USkeletalMeshComp
 	FSkeletalMeshRenderData* SkelMeshRenderData = SkeletalMeshComponent->GetSkeletalMeshRenderData();
 	if (SkelMeshRenderData &&
 		SkelMeshRenderData->LODRenderData.IsValidIndex(SkeletalMeshComponent->GetPredictedLODLevel()) &&
-		SkeletalMeshComponent->MeshObject) 
+		SkeletalMeshComponent->MeshObject)
 	{
 		return new FSkeletalSegmentationSceneProxy(SkeletalMeshComponent, SkelMeshRenderData, ProxyMaterial);
 	}

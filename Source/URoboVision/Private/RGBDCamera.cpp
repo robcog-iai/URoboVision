@@ -84,7 +84,7 @@ ARGBDCamera::ARGBDCamera() /*: ACameraActor(), Width(960), Height(540), Framerat
 	bCaptureColorImage = true;
 	bCaptureDepthImage = true;
 	bCaptureObjectMaskImage = true;
-	
+
 	// TCP IP communication server port
 	ServerPort = 10000;
 	bBindToAnyIP = true;
@@ -235,8 +235,7 @@ void ARGBDCamera::EndPlay(const EEndPlayReason::Type EndPlayReason)
 void ARGBDCamera::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-
-	// Check if paused
+        // Check if paused
 	if(Paused)
 	{
 		return;
@@ -250,7 +249,7 @@ void ARGBDCamera::Tick(float DeltaTime)
 	}
 	TimePassed -= 1.0f / Framerate;
 	//MEASURE_TIME("Tick");
-	//OUT_INFO(TEXT("FRAME_RATE: %f"),Framerate)
+	// OUT_INFO(TEXT("FRAME_RATE: %f"),Framerate)
 
 	if(bColorAllObjectsOnEveryTick)
 	{
@@ -331,11 +330,11 @@ void ARGBDCamera::Pause(const bool _Pause)
 		DepthImgCaptureComp->Deactivate();
 		ObjectMaskImgCaptureComp->SetHiddenInGame(true);
 		ObjectMaskImgCaptureComp->Deactivate();
-		bCompActive = false;	
+		bCompActive = false;
 	}
 	else
 	{
-		// Enable capture 
+		// Enable capture
 		if (bCaptureColorImage)
 		{
 			ColorImgCaptureComp->SetHiddenInGame(false);
@@ -633,7 +632,7 @@ bool ARGBDCamera::ColorObject(AActor *Actor, const FString &name)
 		USegmentationComponent* SegmentationComponent = NewObject<USegmentationComponent>(MeshComponent);
 		SegmentationComponent->SetupAttachment(MeshComponent);
 		SegmentationComponent->RegisterComponent();
-		SegmentationComponent->SetSegmentationColor(SegmentationColor); 
+		SegmentationComponent->SetSegmentationColor(SegmentationColor);
 		SegmentationComponent->MarkRenderStateDirty();
 	}
         return true;
@@ -654,7 +653,7 @@ bool ARGBDCamera::ColorAllObjects()
 		if(bColoringObjectsIsVerbose)
 			OUT_INFO(TEXT("Actor with name: %s."), *ActorName);
 	}
-  
+
 	if(bColoringObjectsIsVerbose)
 	{
 		OUT_INFO(TEXT("Found %d Actors."), NumberOfActors);
@@ -772,7 +771,7 @@ void ARGBDCamera::ProcessObject()
 		Priv->CVObject.wait(WaitLock, [this] {return Priv->DoObject; });
 		Priv->DoObject = false;
 		if(!this->Running) break;
-		ToColorImage(ImageObject, Priv->Buffer->Object);	
+		ToColorImage(ImageObject, Priv->Buffer->Object);
 		Priv->DoneObject = true;
 		Priv->CVDone.notify_one();
 	}
