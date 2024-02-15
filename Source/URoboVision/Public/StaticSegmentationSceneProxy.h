@@ -16,15 +16,10 @@
 #endif
 
 #include "EngineUtils.h"
-<<<<<<< HEAD
 
 #if ENGINE_MINOR_VERSION >= 2 && ENGINE_MAJOR_VERSION == 5
 #include "StaticMeshSceneProxy.h"
 #endif
-=======
-#include "StaticMeshSceneProxy.h"
-
->>>>>>> cf04a4b78a1e69255f76c96aad9712b41f4a23a4
 
 class FStaticSegmentationSceneProxy : public FStaticMeshSceneProxy
 {
