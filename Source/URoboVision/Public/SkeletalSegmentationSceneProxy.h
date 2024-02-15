@@ -15,7 +15,6 @@
 #include "ConstructorHelpers.h"
 #endif
 #include "EngineUtils.h"
-
 #if ENGINE_MINOR_VERSION >= 2 && ENGINE_MAJOR_VERSION == 5
 #include "SkeletalMeshSceneProxy.h"
 #endif
