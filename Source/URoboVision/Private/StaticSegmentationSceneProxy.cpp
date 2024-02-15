@@ -5,7 +5,7 @@
 FStaticSegmentationSceneProxy::FStaticSegmentationSceneProxy(UStaticMeshComponent* Component, bool bForceLODsShareStaticLighting, UMaterialInterface* SegmentationMID) :
 		FStaticMeshSceneProxy(Component, bForceLODsShareStaticLighting)
 	{
-	#if (ENGINE_MINOR_VERSION >= 22 || ENGINE_MAJOR_VERSION == 5)
+	#if (ENGINE_MINOR_VERSION >= 22 || ENGINE_MAJOR_VERSION >= 5)
 		MaterialRenderProxy = SegmentationMID->GetRenderProxy();
 	#else
 		MaterialRenderProxy = SegmentationMID->GetRenderProxy(false, false);
@@ -44,7 +44,7 @@ bool FStaticSegmentationSceneProxy::GetMeshElement(
 	int32 BatchIndex,
 	int32 ElementIndex,
 	uint8 InDepthPriorityGroup,
-#if (ENGINE_MINOR_VERSION >= 22 || ENGINE_MAJOR_VERSION == 5)
+#if (ENGINE_MINOR_VERSION >= 22 || ENGINE_MAJOR_VERSION >= 5)
 	bool bUseSelectionOutline,
 #else
 	bool bUseSelectedMaterial,
@@ -54,7 +54,7 @@ bool FStaticSegmentationSceneProxy::GetMeshElement(
 	FMeshBatch & OutMeshBatch) const
 {
 	bool Ret = FStaticMeshSceneProxy::GetMeshElement(LODIndex, BatchIndex, ElementIndex, InDepthPriorityGroup,
-#if (ENGINE_MINOR_VERSION >= 22 || ENGINE_MAJOR_VERSION == 5)
+#if (ENGINE_MINOR_VERSION >= 22 || ENGINE_MAJOR_VERSION >= 5)
 	bUseSelectionOutline,
 #else
 	bUseSelectedMaterial,

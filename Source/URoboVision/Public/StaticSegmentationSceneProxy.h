@@ -8,10 +8,18 @@
 #include "Runtime/Engine/Public/MaterialShared.h"
 #include "Runtime/Engine/Classes/Engine/Engine.h"
 #include "Runtime/Engine/Public/Rendering/SkeletalMeshRenderData.h"
+
+#if ENGINE_MINOR_VERSION > 23 || ENGINE_MAJOR_VERSION >4
 #include "UObject/ConstructorHelpers.h"
+#else
+#include "ConstructorHelpers.h"
+#endif
+
 #include "EngineUtils.h"
 
-
+#if ENGINE_MINOR_VERSION >= 2 && ENGINE_MAJOR_VERSION == 5
+#include "StaticMeshSceneProxy.h"
+#endif
 
 class FStaticSegmentationSceneProxy : public FStaticMeshSceneProxy
 {
@@ -30,7 +38,7 @@ public:
 		int32 BatchIndex,
 		int32 ElementIndex,
 		uint8 InDepthPriorityGroup,
-	#if (ENGINE_MINOR_VERSION >= 22 || ENGINE_MAJOR_VERSION == 5)
+	#if (ENGINE_MINOR_VERSION >= 22 || ENGINE_MAJOR_VERSION >= 5)
 		bool bUseSelectionOutline,
 	#else
 		bool bUseSelectedMaterial,

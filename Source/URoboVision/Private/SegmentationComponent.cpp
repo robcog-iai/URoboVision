@@ -7,7 +7,12 @@
 #include <sstream>
 #include "Components/SceneCaptureComponent2D.h"
 #include "Camera/CameraComponent.h"
+
+#if ENGINE_MINOR_VERSION > 23 || ENGINE_MAJOR_VERSION >4
 #include "UObject/ConstructorHelpers.h"
+#else
+#include "ConstructorHelpers.h"
+#endif
 #include "EngineUtils.h"
 #include "StopTime.h"
 #include "Server.h"
@@ -19,6 +24,10 @@
 #include <mutex>
 #include <cmath>
 #include <condition_variable>
+
+#if ENGINE_MINOR_VERSION >= 2 && ENGINE_MAJOR_VERSION == 5
+#include "SkeletalMeshSceneProxy.h"
+#endif
 
 USegmentationComponent::USegmentationComponent(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)
@@ -76,8 +85,13 @@ FPrimitiveSceneProxy* USegmentationComponent::CreateSceneProxy(UStaticMeshCompon
 	UMaterialInterface* ProxyMaterial = SegmentationMID;
 	UStaticMesh* ParentStaticMesh = StaticMeshComponent->GetStaticMesh();
 	if(ParentStaticMesh == NULL
+		#if ENGINE_MINOR_VERSION < 27 && ENGINE_MAJOR_VERSION < 5
+		|| ParentStaticMesh->RenderData == NULL
+		|| ParentStaticMesh->RenderData->LODResources.Num() == 0)
+		#else
 		|| ParentStaticMesh->GetRenderData() == NULL
 		|| ParentStaticMesh->GetRenderData()->LODResources.Num() == 0)
+		#endif //Version
 	{
 		OUT_INFO(TEXT("ParentStaticMesh is invalid."));
 		return NULL;
@@ -94,7 +108,7 @@ FPrimitiveSceneProxy* USegmentationComponent::CreateSceneProxy(USkeletalMeshComp
 	FSkeletalMeshRenderData* SkelMeshRenderData = SkeletalMeshComponent->GetSkeletalMeshRenderData();
 	if (SkelMeshRenderData &&
 		SkelMeshRenderData->LODRenderData.IsValidIndex(SkeletalMeshComponent->GetPredictedLODLevel()) &&
-		SkeletalMeshComponent->MeshObject) 
+		SkeletalMeshComponent->MeshObject)
 	{
 		return new FSkeletalSegmentationSceneProxy(SkeletalMeshComponent, SkelMeshRenderData, ProxyMaterial);
 	}
